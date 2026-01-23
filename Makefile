@@ -1,7 +1,7 @@
 SRCDIR := src
 BINDIR := bin
 
-CXXFLAGS := -std=c++17 -O3 -Wall -Wextra -march=native -I$(SRCDIR) $(CXXFLAGS)
+CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) $(CXXFLAGS)
 LDFLAGS  := -lm
 
 EXENAME := gagatt
