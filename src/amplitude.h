@@ -2,7 +2,6 @@
 #define SRC_AMPLITUDE_H
 
 #include <complex>
-
 #include "constants.h"
 
 namespace gagatt {
@@ -19,20 +18,39 @@ inline constexpr Polarization operator-(Polarization pol) {
                                        : Polarization::PLUS;
 }
 
-Amplitude offShellAmplitudeApprox(const double s_hat, const double cos_th,
-                                  const double m1, const double m2,
-                                  const Polarization lambda1,
-                                  const Polarization lambda2,
-                                  const Polarization sigma1,
-                                  const Polarization sigma2);
+Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
+                                  double m2, Polarization lambda1,
+                                  Polarization lambda2, Polarization sigma1,
+                                  Polarization sigma2);
 
-inline Amplitude onShellAmplitude(const double s_hat, const double cos_th,
-                                  const Polarization lambda1,
-                                  const Polarization lambda2,
-                                  const Polarization sigma1,
-                                  const Polarization sigma2) {
+inline Amplitude onShellAmplitude(double s_hat, double cos_th,
+                                  Polarization lambda1, Polarization lambda2,
+                                  Polarization sigma1, Polarization sigma2) {
     return offShellAmplitudeApprox(s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
                                    sigma1, sigma2);
+}
+
+inline double onShellHelAmp2(double s_hat, double cos_th, Polarization lambda1,
+                             Polarization lambda2, Polarization sigma1,
+                             Polarization sigma2) {
+    return std::norm(
+        onShellAmplitude(s_hat, cos_th, lambda1, lambda2, sigma1, sigma2));
+}
+
+template <typename F>
+constexpr auto lam1lam2Sum(F &&f)
+    -> decltype(f(Polarization::PLUS, Polarization::PLUS)) {
+    using P = Polarization;
+    return 0.25 * (f(P::PLUS, P::PLUS) + f(P::PLUS, P::MINUS) +
+                   f(P::MINUS, P::PLUS) + f(P::MINUS, P::MINUS));
+}
+
+double c1OnShell(double s_hat, double cos_th);
+double c2OnShell(double s_hat, double cos_th);
+double c3OnShell(double s_hat, double cos_th);
+
+double onShellAmp2Sum(double s_hat, double cos_th) {
+    return c1OnShell(s_hat, cos_th) + c3OnShell(s_hat, cos_th);
 }
 }  // namespace gagatt
 

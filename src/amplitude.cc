@@ -9,12 +9,10 @@
 namespace gagatt {
 constexpr double COUPLING_FACTOR = 8.0 * std::numbers::pi * ALPHA * QTOP2;
 
-Amplitude offShellAmplitudeApprox(const double s_hat, const double cos_th,
-                                  const double m1, const double m2,
-                                  const Polarization lambda1,
-                                  const Polarization lambda2,
-                                  const Polarization sigma1,
-                                  const Polarization sigma2) {
+Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
+                                  double m2, Polarization lambda1,
+                                  Polarization lambda2, Polarization sigma1,
+                                  Polarization sigma2) {
     // Input validation and threshold check
     if (cos_th > 1.0 || cos_th < -1.0) { return 0.0; }
 
@@ -24,8 +22,8 @@ Amplitude offShellAmplitudeApprox(const double s_hat, const double cos_th,
     // Kinematics
     const double beta2 = 1.0 - ratio;
     const double beta = std::sqrt(beta2);
-    // Simplified: sqrt(1 - beta2) = sqrt(ratio)
-    const double sqrt_ratio = std::sqrt(ratio);
+    const double sqrt_ratio =
+        std::sqrt(ratio);  // sqrt(1 - beta2) = sqrt(ratio)
     const double cos_th2 = cos_th * cos_th;
     const double sin_th2 = std::max(0.0, 1.0 - cos_th2);  // Numerical safety
 
@@ -54,41 +52,27 @@ Amplitude offShellAmplitudeApprox(const double s_hat, const double cos_th,
     return {(COUPLING_FACTOR / denom) * amp, 0.0};
 }
 
-template <typename F>
-constexpr auto lam1lam2Sum(F &&f)
-    -> decltype(f(Polarization::PLUS, Polarization::PLUS)) {
-    using P = Polarization;
-
-    return 0.25 * (f(P::PLUS, P::PLUS) + f(P::PLUS, P::MINUS) +
-                   f(P::MINUS, P::PLUS) + f(P::MINUS, P::MINUS));
-}
-
-inline double onShellAmp2(double s, double c, Polarization l1, Polarization l2,
-                          Polarization s1, Polarization s2) {
-    return std::norm(onShellAmplitude(s, c, l1, l2, s1, s2));
-}
-
-double c1OnShell(const double s_hat, const double cos_th) {
+double c1OnShell(double s_hat, double cos_th) {
     return lam1lam2Sum([=](Polarization l1, Polarization l2) {
         using P = Polarization;
-        return onShellAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) +
-               onShellAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
+        return onShellHelAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) +
+               onShellHelAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
     });
 }
 
-double c2OnShell(const double s_hat, const double cos_th) {
+double c2OnShell(double s_hat, double cos_th) {
     return lam1lam2Sum([=](Polarization l1, Polarization l2) {
         using P = Polarization;
-        return onShellAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) -
-               onShellAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
+        return onShellHelAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) -
+               onShellHelAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
     });
 }
 
-double c3OnShell(const double s_hat, const double cos_th) {
+double c3OnShell(double s_hat, double cos_th) {
     return lam1lam2Sum([=](Polarization l1, Polarization l2) {
         using P = Polarization;
-        return onShellAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::PLUS) +
-               onShellAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::MINUS);
+        return onShellHelAmp2(s_hat, cos_th, l1, l2, P::MINUS, P::PLUS) +
+               onShellHelAmp2(s_hat, cos_th, l1, l2, P::PLUS, P::MINUS);
     });
 }
 }  // namespace gagatt
