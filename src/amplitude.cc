@@ -1,5 +1,6 @@
 #include "amplitude.h"
 #include <cmath>
+#include <functional>
 #include <numbers>
 #include "constants.h"
 
@@ -51,9 +52,41 @@ Amplitude onShellAmplitude(const double s_hat, const double cos_th,
     return {(COUPLING_FACTOR / denominator) * amplitude_factor, 0.0};
 }
 
-// double lam1lam2Sum()
+inline double onShellM2(double s, double c, Polarization l1, Polarization l2,
+                        Polarization s1, Polarization s2) noexcept {
+    return std::norm(onShellAmplitude(s, c, l1, l2, s1, s2));
+}
 
-// double c1OnShell(const double s_hat, const double cos_th) {
+template <typename Func>
+constexpr auto lam1lam2Sum(Func &&amp2_f)
+    -> decltype(amp2_f(Polarization::PLUS, Polarization::PLUS)) {
+    using P = Polarization;
 
-// }
+    return 0.25 * (amp2_f(P::PLUS, P::PLUS) + amp2_f(P::PLUS, P::MINUS) +
+                   amp2_f(P::MINUS, P::PLUS) + amp2_f(P::MINUS, P::MINUS));
+}
+
+double c1OnShell(const double s_hat, const double cos_th) noexcept {
+    return lam1lam2Sum([=](Polarization l1, Polarization l2) {
+        using P = Polarization;
+        return onShellM2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) +
+               onShellM2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
+    });
+}
+
+double c2OnShell(const double s_hat, const double cos_th) noexcept {
+    return lam1lam2Sum([=](Polarization l1, Polarization l2) {
+        using P = Polarization;
+        return onShellM2(s_hat, cos_th, l1, l2, P::PLUS, P::PLUS) -
+               onShellM2(s_hat, cos_th, l1, l2, P::MINUS, P::MINUS);
+    });
+}
+
+double c3OnShell(const double s_hat, const double cos_th) noexcept {
+    return lam1lam2Sum([=](Polarization l1, Polarization l2) {
+        using P = Polarization;
+        return onShellM2(s_hat, cos_th, l1, l2, P::MINUS, P::PLUS) +
+               onShellM2(s_hat, cos_th, l1, l2, P::PLUS, P::MINUS);
+    });
+}
 }  // namespace gagatt
