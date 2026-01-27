@@ -17,39 +17,52 @@ inline constexpr Helicity operator-(Helicity pol) {
     return (pol == Helicity::PLUS) ? Helicity::MINUS : Helicity::PLUS;
 }
 
-Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
-                                  double m2, Helicity lambda1, Helicity lambda2,
-                                  Helicity sigma1, Helicity sigma2);
+Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1, double m2,
+                            Helicity lambda1, Helicity lambda2, Helicity sigma1,
+                            Helicity sigma2);
 
-inline Amplitude onShellAmplitude(double s_hat, double cos_th, Helicity lambda1,
-                                  Helicity lambda2, Helicity sigma1,
-                                  Helicity sigma2) {
-    return offShellAmplitudeApprox(s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
-                                   sigma1, sigma2);
+inline double offShellHelAmp2Approx(double sqrt_s_hat, double cos_th, double m1,
+                                    double m2, Helicity lambda1,
+                                    Helicity lambda2, Helicity sigma1,
+                                    Helicity sigma2) {
+    return std::norm(offShellAmpApprox(sqrt_s_hat, cos_th, m1, m2, lambda1, lambda2,
+                                       sigma1, sigma2));
 }
 
-inline double onShellHelAmp2(double s_hat, double cos_th, Helicity lambda1,
+inline Amplitude onShellAmp(double sqrt_s_hat, double cos_th, Helicity lambda1,
+                            Helicity lambda2, Helicity sigma1,
+                            Helicity sigma2) {
+    return offShellAmpApprox(sqrt_s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
+                             sigma1, sigma2);
+}
+
+inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
                              Helicity lambda2, Helicity sigma1,
                              Helicity sigma2) {
-    return std::norm(
-        onShellAmplitude(s_hat, cos_th, lambda1, lambda2, sigma1, sigma2));
+    return offShellHelAmp2Approx(sqrt_s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
+                                 sigma1, sigma2);
 }
 
-template <typename F>
-constexpr auto lam1lam2Sum(F &&f)
+template <typename M2>
+constexpr auto lam1lam2Sum(M2 &&f)
     -> decltype(f(Helicity::PLUS, Helicity::PLUS)) {
     using H = Helicity;
     return 0.25 * (f(H::PLUS, H::PLUS) + f(H::PLUS, H::MINUS) +
                    f(H::MINUS, H::PLUS) + f(H::MINUS, H::MINUS));
 }
 
-double c1OnShell(double s_hat, double cos_th);
-double c2OnShell(double s_hat, double cos_th);
-double c3OnShell(double s_hat, double cos_th);
+// template <typename C>
+// constexpr auto convolution(C &&f) -> decltype(f(double sqrt_s_hat, ))
 
-double onShellAmp2Sum(double s_hat, double cos_th) {
-    return c1OnShell(s_hat, cos_th) + c3OnShell(s_hat, cos_th);
+double c1OnShell(double sqrt_s_hat, double cos_th);
+double c2OnShell(double sqrt_s_hat, double cos_th);
+double c3OnShell(double sqrt_s_hat, double cos_th);
+
+inline double onShellAmp2Sum(double sqrt_s_hat, double cos_th) {
+    return c1OnShell(sqrt_s_hat, cos_th) + c3OnShell(sqrt_s_hat, cos_th);
 }
+
+double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1, double m2);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H
