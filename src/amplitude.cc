@@ -10,9 +10,8 @@ namespace gagatt {
 constexpr double COUPLING_FACTOR = 8.0 * std::numbers::pi * ALPHA * QTOP2;
 
 Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
-                                  double m2, Helicity lambda1,
-                                  Helicity lambda2, Helicity sigma1,
-                                  Helicity sigma2) {
+                                  double m2, Helicity lambda1, Helicity lambda2,
+                                  Helicity sigma1, Helicity sigma2) {
     // Input validation and threshold check
     const double threshold = (m1 + m2) * (m1 + m2);
     if (s_hat < threshold || std::abs(cos_th) > 1.0) { return {0.0, 0.0}; }
@@ -22,11 +21,11 @@ Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
     if (r > 1.0) { return {0.0, 0.0}; }
 
     // Kinematics
-    const double beta2 = 1.0 - r;
+    const double beta2 = std::max(0.0, 1.0 - r);  // numerical safety
     const double beta = std::sqrt(beta2);
     const double sqrt_r = std::sqrt(r);  // sqrt(1 - beta2) = sqrt(r)
     const double cos_th2 = cos_th * cos_th;
-    const double sin_th2 = std::max(0.0, 1.0 - cos_th2);  // Numerical safety
+    const double sin_th2 = std::max(0.0, 1.0 - cos_th2);  // numerical safety
 
     const double l1 = toDouble(lambda1);
     const double s1 = toDouble(sigma1);

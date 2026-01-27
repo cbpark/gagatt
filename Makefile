@@ -11,6 +11,10 @@ TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
 LIBSRCS := $(filter-out $(EXESRCS), $(wildcard $(SRCDIR)/*.cc))
 LIBOBJS := $(LIBSRCS:.cc=.o)
 
+# GSL
+CXXFLAGS += $(shell gsl-config --cflags)
+LDFLAGS  += $(shell gsl-config --libs)
+
 all: $(TARGETS)
 
 $(BINDIR)/%: $(SRCDIR)/%.o $(LIBOBJS) | $(BINDIR)
