@@ -7,42 +7,40 @@
 namespace gagatt {
 using Amplitude = std::complex<double>;
 
-enum class Polarization { PLUS, MINUS };
+enum class Helicity { PLUS, MINUS };
 
-inline constexpr double toDouble(Polarization pol) {
-    return (pol == Polarization::PLUS) ? 1.0 : -1.0;
+inline constexpr double toDouble(Helicity pol) {
+    return (pol == Helicity::PLUS) ? 1.0 : -1.0;
 }
 
-inline constexpr Polarization operator-(Polarization pol) {
-    return (pol == Polarization::PLUS) ? Polarization::MINUS
-                                       : Polarization::PLUS;
+inline constexpr Helicity operator-(Helicity pol) {
+    return (pol == Helicity::PLUS) ? Helicity::MINUS : Helicity::PLUS;
 }
 
 Amplitude offShellAmplitudeApprox(double s_hat, double cos_th, double m1,
-                                  double m2, Polarization lambda1,
-                                  Polarization lambda2, Polarization sigma1,
-                                  Polarization sigma2);
+                                  double m2, Helicity lambda1, Helicity lambda2,
+                                  Helicity sigma1, Helicity sigma2);
 
-inline Amplitude onShellAmplitude(double s_hat, double cos_th,
-                                  Polarization lambda1, Polarization lambda2,
-                                  Polarization sigma1, Polarization sigma2) {
+inline Amplitude onShellAmplitude(double s_hat, double cos_th, Helicity lambda1,
+                                  Helicity lambda2, Helicity sigma1,
+                                  Helicity sigma2) {
     return offShellAmplitudeApprox(s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
                                    sigma1, sigma2);
 }
 
-inline double onShellHelAmp2(double s_hat, double cos_th, Polarization lambda1,
-                             Polarization lambda2, Polarization sigma1,
-                             Polarization sigma2) {
+inline double onShellHelAmp2(double s_hat, double cos_th, Helicity lambda1,
+                             Helicity lambda2, Helicity sigma1,
+                             Helicity sigma2) {
     return std::norm(
         onShellAmplitude(s_hat, cos_th, lambda1, lambda2, sigma1, sigma2));
 }
 
 template <typename F>
 constexpr auto lam1lam2Sum(F &&f)
-    -> decltype(f(Polarization::PLUS, Polarization::PLUS)) {
-    using P = Polarization;
-    return 0.25 * (f(P::PLUS, P::PLUS) + f(P::PLUS, P::MINUS) +
-                   f(P::MINUS, P::PLUS) + f(P::MINUS, P::MINUS));
+    -> decltype(f(Helicity::PLUS, Helicity::PLUS)) {
+    using H = Helicity;
+    return 0.25 * (f(H::PLUS, H::PLUS) + f(H::PLUS, H::MINUS) +
+                   f(H::MINUS, H::PLUS) + f(H::MINUS, H::MINUS));
 }
 
 double c1OnShell(double s_hat, double cos_th);
