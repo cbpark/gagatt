@@ -2,11 +2,11 @@
 #define SRC_INTEGRATION_H
 
 #include <gsl/gsl_integration.h>
-#include <functional>
+#include <functional>  // std::function
 
 namespace gagatt {
 // Parameters to pass into the integrand
-struct CParams {
+struct IntegralOffShell {
     // The function to integrate: f(sqrt_s, cos_th, m1, m2)
     std::function<double(double, double, double, double)> func;
 
