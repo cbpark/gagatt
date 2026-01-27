@@ -102,6 +102,7 @@ double aC2(double sqrt_s_hat, double cos_th, double m1, double m2) {
     if (sqrt_s_hat < m1 + m2) { return 0.0; }
 
     // r = 1 - beta^2 = 2 * (m1^2 + m2^2) / s_hat
+    const double s_hat = sqrt_s_hat * sqrt_s_hat;
     const double r = 2.0 * (m1 * m1 + m2 * m2) / s_hat;
 
     const double cos_th2 = cos_th * cos_th;
