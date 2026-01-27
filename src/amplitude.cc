@@ -5,6 +5,7 @@
 #include <numbers>
 
 #include "constants.h"
+#include "kinematics.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -18,19 +19,34 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             Helicity sigma1, Helicity sigma2) {
     // Input validation and threshold check
     const double threshold = m1 + m2;
-    if (sqrt_s_hat < threshold || std::abs(cos_th) > 1.0) { return {0.0, 0.0}; }
+    if (sqrt_s_hat < threshold || std::abs(cos_th) > 1.0) {
+#ifdef DEBUG
+        std::cerr << "offShellAmpApprox: invalid input or below threshold\n";
+#endif
+        return {0.0, 0.0};
+    }
+
     // r = 1 - beta^2
     const double s_hat = sqrt_s_hat * sqrt_s_hat;
     const double r = 2.0 * (m1 * m1 + m2 * m2) / s_hat;
-    if (r > 1.0) { return {0.0, 0.0}; }
+    if (r > 1.0) {
+#ifdef DEBUG
+        std::cerr << "offShellAmpApprox: r > 1.0\n";
+#endif
+        return {0.0, 0.0};
+    }
 
-    // Kinematics
     const double beta2 = std::max(0.0, 1.0 - r);  // numerical safety
-    const double beta = std::sqrt(beta2);
-    const double sqrt_r = std::sqrt(r);  // sqrt(1 - beta2) = sqrt(r)
+
     const double cos_th2 = cos_th * cos_th;
     const double sin_th2 = std::max(0.0, 1.0 - cos_th2);  // numerical safety
 
+    // sin^2 + r*cos^2 is more stable than 1 - beta^2*cos^2
+    const double denom = sin_th2 + r * cos_th2;
+    if (denom < 1e-18) { return {0.0, 0.0}; }
+
+    const double beta = std::sqrt(beta2);
+    const double sqrt_r = std::sqrt(r);  // sqrt(1 - beta2) = sqrt(r)
     const double l1 = toDouble(lambda1);
     const double s1 = toDouble(sigma1);
 
@@ -48,11 +64,12 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
     }
 
     // Early exit for forbidden helicity combinations
-    if (amp == 0.0) { return {0.0, 0.0}; }
-
-    // : sin^2 + r*cos^2 is more stable than 1 - beta^2*cos^2
-    const double denom = sin_th2 + r * cos_th2;
-    if (denom < 1e-18) { return {0.0, 0.0}; }
+    if (amp == 0.0) {
+#ifdef DEBUG
+        std::cerr << "offShellAmpApprox: forbidden helicity combinations\n";
+#endif
+        return {0.0, 0.0};
+    }
 
     return {(COUPLING_FACTOR / denom) * amp, 0.0};
 }
@@ -81,6 +98,39 @@ double c3OnShell(double sqrt_s_hat, double cos_th) {
     });
 }
 
+double aC2(double sqrt_s_hat, double cos_th, double m1, double m2) {
+    if (sqrt_s_hat < m1 + m2) { return 0.0; }
+
+    // r = 1 - beta^2 = 2 * (m1^2 + m2^2) / s_hat
+    const double r = 2.0 * (m1 * m1 + m2 * m2) / s_hat;
+
+    const double cos_th2 = cos_th * cos_th;
+    const double sin_th2 = std::max(0.0, 1.0 - cos_th2);
+
+    // Numerically stable denominator: sin^2(th) + r * cos^2(th)
+    const double denom = sin_th2 + r * cos_th2;
+
+    // Division by zero guard for extreme limits
+    if (denom < 1e-18) { return 0.0; }
+
+    const double a_c = COUPLING_FACTOR / denom;
+    return a_c * a_c;
+}
+
+double topProp2(double m) {
+    const double msq = m * m;
+
+    // (m^2 - M^2)^2
+    const double diff = msq - MTOP2;
+    const double diff2 = diff * diff;
+
+    // Denominator: (m^2 - M^2)^2 + (M*Gamma)^2
+    const double denom = diff2 + MGAMMATOP2;
+    const double factor = MGAMMATOP * std::numbers::inv_pi;
+
+    return factor / denom;
+}
+
 double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1,
                         double m2) {
     return lam1lam2Sum([=](Helicity l1, Helicity l2) {
@@ -90,5 +140,10 @@ double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1,
                offShellHelAmp2Approx(sqrt_s_hat, cos_th, m1, m2, l1, l2,
                                      H::MINUS, H::MINUS);
     });
+}
+
+double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
+    // const double s_hat = sqrt_s_hat * sqrt_s_hat;
+    return 0.0;
 }
 }  // namespace gagatt
