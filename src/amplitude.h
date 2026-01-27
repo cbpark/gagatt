@@ -17,16 +17,16 @@ inline constexpr Helicity operator-(Helicity pol) {
     return (pol == Helicity::PLUS) ? Helicity::MINUS : Helicity::PLUS;
 }
 
-Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1, double m2,
-                            Helicity lambda1, Helicity lambda2, Helicity sigma1,
-                            Helicity sigma2);
+Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
+                            double m2, Helicity lambda1, Helicity lambda2,
+                            Helicity sigma1, Helicity sigma2);
 
 inline double offShellHelAmp2Approx(double sqrt_s_hat, double cos_th, double m1,
                                     double m2, Helicity lambda1,
                                     Helicity lambda2, Helicity sigma1,
                                     Helicity sigma2) {
-    return std::norm(offShellAmpApprox(sqrt_s_hat, cos_th, m1, m2, lambda1, lambda2,
-                                       sigma1, sigma2));
+    return std::norm(offShellAmpApprox(sqrt_s_hat, cos_th, m1, m2, lambda1,
+                                       lambda2, sigma1, sigma2));
 }
 
 inline Amplitude onShellAmp(double sqrt_s_hat, double cos_th, Helicity lambda1,
@@ -39,8 +39,8 @@ inline Amplitude onShellAmp(double sqrt_s_hat, double cos_th, Helicity lambda1,
 inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
                              Helicity lambda2, Helicity sigma1,
                              Helicity sigma2) {
-    return offShellHelAmp2Approx(sqrt_s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
-                                 sigma1, sigma2);
+    return offShellHelAmp2Approx(sqrt_s_hat, cos_th, MTOP, MTOP, lambda1,
+                                 lambda2, sigma1, sigma2);
 }
 
 template <typename M2>
@@ -50,9 +50,6 @@ constexpr auto lam1lam2Sum(M2 &&f)
     return 0.25 * (f(H::PLUS, H::PLUS) + f(H::PLUS, H::MINUS) +
                    f(H::MINUS, H::PLUS) + f(H::MINUS, H::MINUS));
 }
-
-// template <typename C>
-// constexpr auto convolution(C &&f) -> decltype(f(double sqrt_s_hat, ))
 
 double c1OnShell(double sqrt_s_hat, double cos_th);
 double c2OnShell(double sqrt_s_hat, double cos_th);
