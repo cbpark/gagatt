@@ -5,6 +5,7 @@
 #include <numbers>
 
 #include "constants.h"
+#include "integration.h"
 #include "kinematics.h"
 
 #ifdef DEBUG
@@ -144,7 +145,22 @@ double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1,
 }
 
 double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
-    // const double s_hat = sqrt_s_hat * sqrt_s_hat;
-    return 0.0;
+    auto kernel = [](double sqrt_s_val, double ct_val, double m1, double m2) {
+        double s = sqrt_s_val * sqrt_s_val;
+        double m1sq = m1 * m1;
+        double m2sq = m2 * m2;
+        double lam12 = lambda12(1.0, m1sq / s, m2sq / s);
+
+        double c1_hat = c1OffShellApprox(sqrt_s_val, ct_val, m1, m2);
+
+        double bw1 = topProp2(m1);
+        double bw2 = topProp2(m2);
+
+        return lam12 * c1_hat * bw1 * bw2;
+    };
+
+    double threshold = 0.0;
+
+    return integrateOffShellMasses(sqrt_s_hat, cos_th, threshold, kernel);
 }
 }  // namespace gagatt

@@ -33,12 +33,35 @@ double outer_m1_integrand(double m1, void *params) {
 
 double integrateOffShellMasses(
     double sqrt_s_hat, double cos_th, double m_min,
-    std::function<double(double, double, double, double)> func,
-    double epsrel = 1e-4) {
+    std::function<double(double, double, double, double)> func, double epsrel) {
     if (sqrt_s_hat < 2.0 * m_min) { return 0.0; }
+
+    auto outer_ws = std::unique_ptr<gsl_integration_workspace,
+                                    void (*)(gsl_integration_workspace *)>(
+        gsl_integration_workspace_alloc(2000), gsl_integration_workspace_free);
+
+    auto inner_ws = std::unique_ptr<gsl_integration_workspace,
+                                    void (*)(gsl_integration_workspace *)>(
+        gsl_integration_workspace_alloc(2000), gsl_integration_workspace_free);
+
+    IntegralOffShell params{.func = std::move(func),
+                            .sqrt_s_hat = sqrt_s_hat,
+                            .cos_th = cos_th,
+                            .m_threshold = m_min,
+                            .inner_ws = inner_ws.get(),
+                            .epsrel = epsrel};
+
+    gsl_function F;
+    F.function = &outer_m1_integrand;
+    F.params = &params;
+
+    const double m1_min = m_min;
+    const double m1_max = sqrt_s_hat - m_min;
 
     double result = 0.0;
     double error = 0.0;
+    gsl_integration_qags(&F, m1_min, m1_max, 0, epsrel, 2000, outer_ws.get(),
+                         &result, &error);
 
     return result;
 }

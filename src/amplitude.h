@@ -59,7 +59,7 @@ inline double onShellAmp2Sum(double sqrt_s_hat, double cos_th) {
     return c1OnShell(sqrt_s_hat, cos_th) + c3OnShell(sqrt_s_hat, cos_th);
 }
 
-// double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1, double m2);
+double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H
