@@ -26,5 +26,6 @@ int main() {
 
     const double c1_off_shell_approx =
         gagatt::c1TildeOffShellApprox(sqrt_s_hat, cos_th);
+        // gagatt::c1OffShellApprox(sqrt_s_hat, cos_th, gagatt::MTOP, gagatt::MTOP);
     std::cout << "C1(off-shell) (approx) = " << c1_off_shell_approx << '\n';
 }

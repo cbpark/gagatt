@@ -151,12 +151,21 @@ double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
         double m2sq = m2 * m2;
         double lam12 = lambda12(1.0, m1sq / s, m2sq / s);
 
+        double a_c_sq = aC2(sqrt_s_val, ct_val, m1, m2);
+
         double c1_hat = c1OffShellApprox(sqrt_s_val, ct_val, m1, m2);
 
         double bw1 = topProp2(m1);
         double bw2 = topProp2(m2);
 
-        return lam12 * c1_hat * bw1 * bw2;
+#ifdef DEBUG
+        std::cerr << "c1TildeOffShellApprox kernel: lam12 = " << lam12 << '\n';
+        std::cerr << "c1TildeOffShellApprox kernel: a_c_sq = " << a_c_sq
+                  << '\n';
+        std::cerr << "c1TildeOffShellApprox kernel: bw1 = " << bw1 << '\n';
+        std::cerr << "c1TildeOffShellApprox kernel: bw2 = " << bw2 << '\n';
+#endif
+        return lam12 * a_c_sq * c1_hat * bw1 * bw2;
     };
 
     double threshold = 0.0;
