@@ -1,6 +1,7 @@
 .#*
 *~
 *.o
-bin
+*.out
 .ccls-cache
-a.out
+bin
+tmp
