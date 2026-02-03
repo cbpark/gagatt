@@ -99,6 +99,14 @@ double c3OnShell(double sqrt_s_hat, double cos_th) {
     });
 }
 
+double c4OnShell(double sqrt_s_hat, double cos_th) {
+    return lam1lam2Sum([=](Helicity l1, Helicity l2) {
+        using H = Helicity;
+        return -onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::MINUS, H::PLUS) +
+               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::PLUS, H::MINUS);
+    });
+}
+
 /*
 double aC2(double sqrt_s_hat, double cos_th, double m1, double m2) {
     if (sqrt_s_hat < m1 + m2) { return 0.0; }

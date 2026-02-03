@@ -23,6 +23,12 @@ int main() {
     const double c1_on_shell = gagatt::c1OnShell(sqrt_s_hat, cos_th);
     std::cout << "C1(on-shell) = " << c1_on_shell << '\n';
 
+    const double c2_on_shell = gagatt::c2OnShell(sqrt_s_hat, cos_th);
+    std::cout << "C2(on-shell) = " << c2_on_shell << '\n';
+
     const double c3_on_shell = gagatt::c3OnShell(sqrt_s_hat, cos_th);
     std::cout << "C3(on-shell) = " << c3_on_shell << '\n';
+
+    const double c4_on_shell = gagatt::c4OnShell(sqrt_s_hat, cos_th);
+    std::cout << "C4(on-shell) = " << c4_on_shell << '\n';
 }

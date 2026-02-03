@@ -54,6 +54,7 @@ constexpr auto lam1lam2Sum(M2 &&f)
 double c1OnShell(double sqrt_s_hat, double cos_th);
 double c2OnShell(double sqrt_s_hat, double cos_th);
 double c3OnShell(double sqrt_s_hat, double cos_th);
+double c4OnShell(double sqrt_s_hat, double cos_th);
 
 inline double onShellAmp2Sum(double sqrt_s_hat, double cos_th) {
     return c1OnShell(sqrt_s_hat, cos_th) + c3OnShell(sqrt_s_hat, cos_th);
