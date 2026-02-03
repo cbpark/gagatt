@@ -1,6 +1,7 @@
 #ifndef SRC_AMPLITUDE_H
 #define SRC_AMPLITUDE_H
 
+#include <array>
 #include <complex>
 #include "constants.h"
 
@@ -43,12 +44,16 @@ inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
                                  lambda2, sigma1, sigma2);
 }
 
-template <typename M2>
-constexpr auto lam1lam2Sum(M2 &&f)
-    -> decltype(f(Helicity::PLUS, Helicity::PLUS)) {
-    using H = Helicity;
-    return 0.25 * (f(H::PLUS, H::PLUS) + f(H::PLUS, H::MINUS) +
-                   f(H::MINUS, H::PLUS) + f(H::MINUS, H::MINUS));
+inline constexpr std::array<Helicity, 2> all_helicities = {Helicity::PLUS,
+                                                           Helicity::MINUS};
+
+template <typename F>
+constexpr auto averageHelicities(F &&f) {
+    auto sum = f(Helicity::PLUS, Helicity::PLUS) * 0.0;  // deduce type
+    for (auto h1 : all_helicities) {
+        for (auto h2 : all_helicities) { sum += f(h1, h2); }
+    }
+    return sum * 0.25;
 }
 
 double c1OnShell(double sqrt_s_hat, double cos_th);
@@ -60,8 +65,8 @@ inline double onShellAmp2Sum(double sqrt_s_hat, double cos_th) {
     return c1OnShell(sqrt_s_hat, cos_th) + c3OnShell(sqrt_s_hat, cos_th);
 }
 
-// double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1, double m2);
-// double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th);
+// double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1, double
+// m2); double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H

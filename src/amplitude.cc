@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <functional>
-#include <numbers>
+#include <limits>
 
 #include "constants.h"
 // #include "integration.h"
@@ -13,8 +13,6 @@
 #endif
 
 namespace gagatt {
-constexpr double COUPLING_FACTOR = 8.0 * std::numbers::pi * ALPHA * QTOP2;
-
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             double m2, Helicity lambda1, Helicity lambda2,
                             Helicity sigma1, Helicity sigma2) {
@@ -44,7 +42,8 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 
     // sin^2 + r*cos^2 is more stable than 1 - beta^2*cos^2
     const double denom = sin_th2 + r * cos_th2;
-    if (denom < 1e-18) { return {0.0, 0.0}; }
+    const double epsilon = std::numeric_limits<double>::epsilon();
+    if (denom < epsilon) { return {0.0, 0.0}; }
 
     const double beta = std::sqrt(beta2);
     const double sqrt_r = std::sqrt(r);  // sqrt(1 - beta2) = sqrt(r)
@@ -76,34 +75,46 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 }
 
 double c1OnShell(double sqrt_s_hat, double cos_th) {
-    return lam1lam2Sum([=](Helicity l1, Helicity l2) {
-        using H = Helicity;
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::PLUS, H::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::MINUS, H::MINUS);
+    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
+
+    return averageHelicities([&](Helicity l1, Helicity l2) {
+        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
+                              Helicity::PLUS) +
+               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
+                              Helicity::MINUS);
     });
 }
 
 double c2OnShell(double sqrt_s_hat, double cos_th) {
-    return lam1lam2Sum([=](Helicity l1, Helicity l2) {
-        using H = Helicity;
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::PLUS, H::PLUS) -
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::MINUS, H::MINUS);
+    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
+
+    return averageHelicities([&](Helicity l1, Helicity l2) {
+        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
+                              Helicity::PLUS) -
+               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
+                              Helicity::MINUS);
     });
 }
 
 double c3OnShell(double sqrt_s_hat, double cos_th) {
-    return lam1lam2Sum([=](Helicity l1, Helicity l2) {
-        using H = Helicity;
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::MINUS, H::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::PLUS, H::MINUS);
+    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
+
+    return averageHelicities([&](Helicity l1, Helicity l2) {
+        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
+                              Helicity::PLUS) +
+               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
+                              Helicity::MINUS);
     });
 }
 
 double c4OnShell(double sqrt_s_hat, double cos_th) {
-    return lam1lam2Sum([=](Helicity l1, Helicity l2) {
-        using H = Helicity;
-        return -onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::MINUS, H::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, H::PLUS, H::MINUS);
+    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
+
+    return averageHelicities([&](Helicity l1, Helicity l2) {
+        return -onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
+                               Helicity::PLUS) +
+               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
+                              Helicity::MINUS);
     });
 }
 

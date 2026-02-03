@@ -4,7 +4,7 @@
 #include <cmath>
 
 namespace gagatt {
-inline double lambda(double x, double y, double z) {
+inline constexpr double lambda(double x, double y, double z) {
     return x * x + y * y + z * z - 2.0 * (x * y + y * z + z * x);
 }
 
