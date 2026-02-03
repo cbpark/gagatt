@@ -74,48 +74,23 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
     return {(COUPLING_FACTOR / denom) * amp, 0.0};
 }
 
-double c1OnShell(double sqrt_s_hat, double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
+PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat,
+                                              double cos_th) {
+    if (sqrt_s_hat < TTBARTHRES) { return {0.0, 0.0, 0.0, 0.0}; }
 
-    return averageHelicities([&](Helicity l1, Helicity l2) {
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
-                              Helicity::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
-                              Helicity::MINUS);
-    });
-}
+    return averageHelicities(
+        [&](Helicity l1, Helicity l2) -> PolarizationCoefficients {
+            const double pp = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
+                                             Helicity::PLUS, Helicity::PLUS);
+            const double mm = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
+                                             Helicity::MINUS, Helicity::MINUS);
+            const double mp = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
+                                             Helicity::MINUS, Helicity::PLUS);
+            const double pm = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
+                                             Helicity::PLUS, Helicity::MINUS);
 
-double c2OnShell(double sqrt_s_hat, double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
-
-    return averageHelicities([&](Helicity l1, Helicity l2) {
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
-                              Helicity::PLUS) -
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
-                              Helicity::MINUS);
-    });
-}
-
-double c3OnShell(double sqrt_s_hat, double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
-
-    return averageHelicities([&](Helicity l1, Helicity l2) {
-        return onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
-                              Helicity::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
-                              Helicity::MINUS);
-    });
-}
-
-double c4OnShell(double sqrt_s_hat, double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
-
-    return averageHelicities([&](Helicity l1, Helicity l2) {
-        return -onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::MINUS,
-                               Helicity::PLUS) +
-               onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2, Helicity::PLUS,
-                              Helicity::MINUS);
-    });
+            return {pp + mm, pp - mm, mp + pm, -mp + pm};
+        });
 }
 
 /*
