@@ -94,15 +94,25 @@ PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat,
                                           Helicity::PLUS, Helicity::MINUS);
             const double pm2 = std::norm(pm);
 
-            return {pp2 + mm2,
-                    pp2 - mm2,
-                    mp2 + pm2,
-                    -mp2 + pm2,
-                    ((pp - mm) * std::conj(mp - pm)).real(),
-                    -((pp - mm) * std::conj(mp + pm)).imag(),
-                    ((pp + mm) * std::conj(mp + pm)).real(),
-                    -((pp + mm) * std::conj(mp - pm)).imag()};
-        });
+            return {
+                pp2 + mm2,                                 // c1
+                pp2 - mm2,                                 // c2
+                mp2 + pm2,                                 // c3
+                -mp2 + pm2,                                // c4
+                ((pp - mm) * std::conj(mp - pm)).real(),   // c5
+                -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
+                ((pp + mm) * std::conj(mp + pm)).real(),   // c7
+                -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
+                ((pp + mm) * std::conj(mp - pm)).real(),   // c9
+                -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
+                ((pp - mm) * std::conj(mp + pm)).real(),   // c11
+                -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
+                -2.0 * (pp * std::conj(mm)).real(),        // c13
+                2.0 * (pp * std::conj(mm)).imag(),         // c14
+                -2.0 * (mp * std::conj(pm)).real(),        // c15
+                -2.0 * (mp * std::conj(pm)).imag()         // c16
+            };
+        });  // return averageHelicities
 }
 
 /*
@@ -152,11 +162,9 @@ double c1OffShellApprox(double sqrt_s_hat, double cos_th, double m1,
 }
 
 double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
-    auto kernel = [](double sqrt_s_val, double ct_val, double m1, double m2) {
-        double s = sqrt_s_val * sqrt_s_val;
-        double m1sq = m1 * m1;
-        double m2sq = m2 * m2;
-        double lam12 = lambda12(1.0, m1sq / s, m2sq / s);
+    auto kernel = [](double sqrt_s_val, double ct_val, double m1, double m2)
+{ double s = sqrt_s_val * sqrt_s_val; double m1sq = m1 * m1; double m2sq =
+m2 * m2; double lam12 = lambda12(1.0, m1sq / s, m2sq / s);
 
         double a_c_sq = aC2(sqrt_s_val, ct_val, m1, m2);
 
@@ -166,8 +174,8 @@ double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
         double bw2 = topProp2(m2);
 
 #ifdef DEBUG
-        std::cerr << "c1TildeOffShellApprox kernel: lam12 = " << lam12 << '\n';
-        std::cerr << "c1TildeOffShellApprox kernel: a_c_sq = " << a_c_sq
+        std::cerr << "c1TildeOffShellApprox kernel: lam12 = " << lam12 <<
+'\n'; std::cerr << "c1TildeOffShellApprox kernel: a_c_sq = " << a_c_sq
                   << '\n';
         std::cerr << "c1TildeOffShellApprox kernel: bw1 = " << bw1 << '\n';
         std::cerr << "c1TildeOffShellApprox kernel: bw2 = " << bw2 << '\n';

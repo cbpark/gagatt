@@ -1,9 +1,7 @@
 #ifndef SRC_AMPLITUDE_H
 #define SRC_AMPLITUDE_H
 
-#include <array>
 #include <complex>
-#include <functional>
 #include <type_traits>
 #include "constants.h"
 
@@ -47,7 +45,8 @@ inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
 }
 
 struct PolarizationCoefficients {
-    double c1, c2, c3, c4, c5, c6, c7, c8;
+    double c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
+        c16;
 
     PolarizationCoefficients &operator+=(
         const PolarizationCoefficients &other) {
@@ -59,17 +58,24 @@ struct PolarizationCoefficients {
         c6 += other.c6;
         c7 += other.c7;
         c8 += other.c8;
+        c9 += other.c9;
+        c10 += other.c10;
+        c11 += other.c11;
+        c12 += other.c12;
+        c13 += other.c13;
+        c14 += other.c14;
+        c15 += other.c15;
+        c16 += other.c16;
         return *this;
     }
 
     PolarizationCoefficients operator*(double factor) const {
-        return {c1 * factor, c2 * factor, c3 * factor, c4 * factor,
-                c5 * factor, c6 * factor, c7 * factor, c8 * factor};
+        return {c1 * factor,  c2 * factor,  c3 * factor,  c4 * factor,
+                c5 * factor,  c6 * factor,  c7 * factor,  c8 * factor,
+                c9 * factor,  c10 * factor, c11 * factor, c12 * factor,
+                c13 * factor, c14 * factor, c15 * factor, c16 * factor};
     }
 };
-
-inline constexpr std::array<Helicity, 2> all_helicities = {Helicity::PLUS,
-                                                           Helicity::MINUS};
 
 template <typename F>
 auto averageHelicities(F &&func) {
