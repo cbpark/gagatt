@@ -32,9 +32,9 @@ inline double offShellHelAmp2Approx(double sqrt_s_hat, double cos_th, double m1,
                                        lambda2, sigma1, sigma2));
 }
 
-inline Amplitude onShellAmp(double sqrt_s_hat, double cos_th, Helicity lambda1,
-                            Helicity lambda2, Helicity sigma1,
-                            Helicity sigma2) {
+inline Amplitude onShellHelAmp(double sqrt_s_hat, double cos_th,
+                               Helicity lambda1, Helicity lambda2,
+                               Helicity sigma1, Helicity sigma2) {
     return offShellAmpApprox(sqrt_s_hat, cos_th, MTOP, MTOP, lambda1, lambda2,
                              sigma1, sigma2);
 }
@@ -47,7 +47,7 @@ inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
 }
 
 struct PolarizationCoefficients {
-    double c1, c2, c3, c4;
+    double c1, c2, c3, c4, c5, c6;
 };
 
 inline constexpr std::array<Helicity, 2> all_helicities = {Helicity::PLUS,
@@ -68,6 +68,8 @@ constexpr auto averageHelicities(F &&f) {
                 total.c2 += res.c2;
                 total.c3 += res.c3;
                 total.c4 += res.c4;
+                total.c5 += res.c5;
+                total.c6 += res.c6;
             }
         }
     }
@@ -76,7 +78,8 @@ constexpr auto averageHelicities(F &&f) {
         return total * 0.25;
     } else {
         return PolarizationCoefficients{total.c1 * 0.25, total.c2 * 0.25,
-                                        total.c3 * 0.25, total.c4 * 0.25};
+                                        total.c3 * 0.25, total.c4 * 0.25,
+                                        total.c5 * 0.25, total.c6 * 0.25};
     }
 }
 

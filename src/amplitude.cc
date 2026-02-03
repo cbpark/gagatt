@@ -1,6 +1,7 @@
 #include "amplitude.h"
 
 #include <cmath>
+#include <complex>
 #include <functional>
 #include <limits>
 
@@ -76,20 +77,29 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 
 PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat,
                                               double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return {0.0, 0.0, 0.0, 0.0}; }
+    if (sqrt_s_hat < TTBARTHRES) { return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; }
 
     return averageHelicities(
         [&](Helicity l1, Helicity l2) -> PolarizationCoefficients {
-            const double pp = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
-                                             Helicity::PLUS, Helicity::PLUS);
-            const double mm = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
-                                             Helicity::MINUS, Helicity::MINUS);
-            const double mp = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
-                                             Helicity::MINUS, Helicity::PLUS);
-            const double pm = onShellHelAmp2(sqrt_s_hat, cos_th, l1, l2,
-                                             Helicity::PLUS, Helicity::MINUS);
+            const auto pp = onShellHelAmp(sqrt_s_hat, cos_th, l1, l2,
+                                          Helicity::PLUS, Helicity::PLUS);
+            const double pp2 = std::norm(pp);
+            const auto mm = onShellHelAmp(sqrt_s_hat, cos_th, l1, l2,
+                                          Helicity::MINUS, Helicity::MINUS);
+            const double mm2 = std::norm(mm);
+            const auto mp = onShellHelAmp(sqrt_s_hat, cos_th, l1, l2,
+                                          Helicity::MINUS, Helicity::PLUS);
+            const double mp2 = std::norm(mp);
+            const auto pm = onShellHelAmp(sqrt_s_hat, cos_th, l1, l2,
+                                          Helicity::PLUS, Helicity::MINUS);
+            const double pm2 = std::norm(pm);
 
-            return {pp + mm, pp - mm, mp + pm, -mp + pm};
+            return {pp2 + mm2,
+                    pp2 - mm2,
+                    mp2 + pm2,
+                    -mp2 + pm2,
+                    ((pp - mm) * std::conj(mp - pm)).real(),
+                    -((pp - mm) * std::conj(mp + pm)).imag()};
         });
 }
 
