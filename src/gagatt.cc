@@ -24,4 +24,6 @@ int main() {
     std::cout << "C4(on-shell) = " << coeffs.c4 << '\n';
     std::cout << "C5(on-shell) = " << coeffs.c5 << '\n';
     std::cout << "C6(on-shell) = " << coeffs.c6 << '\n';
+    std::cout << "C7(on-shell) = " << coeffs.c7 << '\n';
+    std::cout << "C8(on-shell) = " << coeffs.c8 << '\n';
 }

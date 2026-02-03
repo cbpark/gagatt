@@ -47,40 +47,42 @@ inline double onShellHelAmp2(double sqrt_s_hat, double cos_th, Helicity lambda1,
 }
 
 struct PolarizationCoefficients {
-    double c1, c2, c3, c4, c5, c6;
+    double c1, c2, c3, c4, c5, c6, c7, c8;
+
+    PolarizationCoefficients &operator+=(
+        const PolarizationCoefficients &other) {
+        c1 += other.c1;
+        c2 += other.c2;
+        c3 += other.c3;
+        c4 += other.c4;
+        c5 += other.c5;
+        c6 += other.c6;
+        c7 += other.c7;
+        c8 += other.c8;
+        return *this;
+    }
+
+    PolarizationCoefficients operator*(double factor) const {
+        return {c1 * factor, c2 * factor, c3 * factor, c4 * factor,
+                c5 * factor, c6 * factor, c7 * factor, c8 * factor};
+    }
 };
 
 inline constexpr std::array<Helicity, 2> all_helicities = {Helicity::PLUS,
                                                            Helicity::MINUS};
 
 template <typename F>
-constexpr auto averageHelicities(F &&f) {
+auto averageHelicities(F &&func) {
     using ResultType = std::invoke_result_t<F, Helicity, Helicity>;
     ResultType total{};
 
-    for (auto l1 : all_helicities) {
-        for (auto l2 : all_helicities) {
-            auto res = f(l1, l2);
-            if constexpr (std::is_arithmetic_v<ResultType>) {
-                total += res;
-            } else {
-                total.c1 += res.c1;
-                total.c2 += res.c2;
-                total.c3 += res.c3;
-                total.c4 += res.c4;
-                total.c5 += res.c5;
-                total.c6 += res.c6;
-            }
+    for (auto l1 : {Helicity::PLUS, Helicity::MINUS}) {
+        for (auto l2 : {Helicity::PLUS, Helicity::MINUS}) {
+            total += func(l1, l2);
         }
     }
 
-    if constexpr (std::is_arithmetic_v<ResultType>) {
-        return total * 0.25;
-    } else {
-        return PolarizationCoefficients{total.c1 * 0.25, total.c2 * 0.25,
-                                        total.c3 * 0.25, total.c4 * 0.25,
-                                        total.c5 * 0.25, total.c6 * 0.25};
-    }
+    return total * 0.25;
 }
 
 PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat, double cos_th);

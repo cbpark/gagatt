@@ -77,7 +77,7 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 
 PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat,
                                               double cos_th) {
-    if (sqrt_s_hat < TTBARTHRES) { return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; }
+    if (sqrt_s_hat < TTBARTHRES) { return {}; }
 
     return averageHelicities(
         [&](Helicity l1, Helicity l2) -> PolarizationCoefficients {
@@ -99,7 +99,9 @@ PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat,
                     mp2 + pm2,
                     -mp2 + pm2,
                     ((pp - mm) * std::conj(mp - pm)).real(),
-                    -((pp - mm) * std::conj(mp + pm)).imag()};
+                    -((pp - mm) * std::conj(mp + pm)).imag(),
+                    ((pp + mm) * std::conj(mp + pm)).real(),
+                    -((pp + mm) * std::conj(mp - pm)).imag()};
         });
 }
 
