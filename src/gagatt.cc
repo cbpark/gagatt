@@ -5,6 +5,8 @@
 #include "amplitude.h"
 #include "constants.h"
 
+using H = gagatt::Helicity;
+
 int main() {
     std::cout << "Hello, world!\n";
     std::cout << "M(top) = " << gagatt::MTOP << '\n';
@@ -14,18 +16,13 @@ int main() {
     std::cout << "sqrt(s) = " << sqrt_s_hat << '\n';
     std::cout << "cos(theta) = " << cos_th << '\n';
 
+    auto on_shell_amp = gagatt::onShellAmp(sqrt_s_hat, cos_th, H::PLUS, H::PLUS,
+                                           H::PLUS, H::MINUS);
+    std::cout << "on_shell_amp = " << on_shell_amp << '\n';
+
     const double c1_on_shell = gagatt::c1OnShell(sqrt_s_hat, cos_th);
     std::cout << "C1(on-shell) = " << c1_on_shell << '\n';
 
-    // const double c3_on_shell = gagatt::c3OnShell(sqrt_s_hat, cos_th);
-    // std::cout << "C3(on-shell) = " << c3_on_shell << '\n';
-
-    // std::cout << "C1(on-shell) + C3(on-shell) = " << c1_on_shell +
-    // c3_on_shell
-    //           << '\n';
-
-    const double c1_off_shell_approx =
-        gagatt::c1TildeOffShellApprox(sqrt_s_hat, cos_th);
-        // gagatt::c1OffShellApprox(sqrt_s_hat, cos_th, gagatt::MTOP, gagatt::MTOP);
-    std::cout << "C1(off-shell) (approx) = " << c1_off_shell_approx << '\n';
+    const double c3_on_shell = gagatt::c3OnShell(sqrt_s_hat, cos_th);
+    std::cout << "C3(on-shell) = " << c3_on_shell << '\n';
 }

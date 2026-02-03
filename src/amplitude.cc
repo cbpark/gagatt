@@ -5,7 +5,7 @@
 #include <numbers>
 
 #include "constants.h"
-#include "integration.h"
+// #include "integration.h"
 #include "kinematics.h"
 
 #ifdef DEBUG
@@ -99,6 +99,7 @@ double c3OnShell(double sqrt_s_hat, double cos_th) {
     });
 }
 
+/*
 double aC2(double sqrt_s_hat, double cos_th, double m1, double m2) {
     if (sqrt_s_hat < m1 + m2) { return 0.0; }
 
@@ -172,4 +173,5 @@ double c1TildeOffShellApprox(double sqrt_s_hat, double cos_th) {
 
     return integrateOffShellMasses(sqrt_s_hat, cos_th, threshold, kernel);
 }
+*/
 }  // namespace gagatt
