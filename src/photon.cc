@@ -3,7 +3,7 @@
 #include <gsl/gsl_integration.h>
 #include <cmath>
 #include <optional>
-#include "amplitude.h"
+#include "helicity.h"
 
 namespace gagatt {
 double sigmaC(double x, double pe, double pc) {

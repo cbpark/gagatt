@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "constants.h"
+#include "helicity.h"
 // #include "integration.h"
 #include "kinematics.h"
 
