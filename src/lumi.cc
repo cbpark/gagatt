@@ -6,12 +6,13 @@
 int main() {
     const double x = 4.8;
 
-    std::array<double, 100> y{}, f{};
-    std::ofstream fout("f.dat");
+    std::array<double, 100> z{}, lumi{};
+    std::ofstream fout("tmp/lumi.dat");
     for (int i = 0; i < 100; ++i) {
-        y[i] = i / 100.0;
-        f[i] = gagatt::fLumi(x, y[i], 1.0, -1.0);
+        z[i] = i / 100.0;
+        lumi[i] = gagatt::photonLuminosityUnpol(z[i], x, 1.0, -1.0, 1.0, -1.0);
+        // lumi[i] = gagatt::photonLuminosityUnpol(z[i], x, 0, 0, 0, 0);
 
-        fout << y[i] << "  " << f[i] << '\n';
+        fout << z[i] << "  " << lumi[i] << '\n';
     }
 }

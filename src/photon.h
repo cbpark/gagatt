@@ -4,14 +4,9 @@
 namespace gagatt {
 double fLumi(double x, double y, double pe, double pc);
 
-// sigma_c * 2 pi alpha^2 / (x m_e^2)
-double sigmaC(double x, double pe, double pc);
-
-// struct PhotonPolarization {
-//     double c0, c2;
-// };
-
-// PhotonPolarization computePhotonC(double x, double y);
+// z = sqrt(tau)
+double photonLuminosityUnpol(double z, double x, double pe1, double pc1,
+                             double pe2, double pc2);
 }  // namespace gagatt
 
 #endif  // SRC_PHOTON_H
