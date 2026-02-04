@@ -2,6 +2,7 @@
 *~
 *.o
 *.out
+*.dat
 .ccls-cache
 bin
 tmp
