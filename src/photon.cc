@@ -3,6 +3,23 @@
 #include "amplitude.h"
 
 namespace gagatt {
+double fLumi(double x, double y, Helicity pe, Helicity pc) {
+    const double y_max = x / (1.0 + x);
+    if (y < 0.0 || y >= y_max || y >= 1.0) { return 0.0; }
+
+    const double sigma_c = sigmaC(x, pe, pc);
+    if (sigma_c <= 0.0) { return 0.0; }
+
+    const double om_y = 1.0 - y;
+    const double r = y / (x * om_y);
+    const double pol = toDouble(pe) * toDouble(pc);
+
+    double f = (1.0 / om_y) + om_y - 4.0 * r * (1.0 - r) -
+               r * x * (2.0 * r - 1.0) * (2.0 - y) * pol;
+
+    return f / sigma_c;
+}
+
 double sigmaC(double x, Helicity pe, Helicity pc) {
     if (x < 1e-12) return 0.0;
 
