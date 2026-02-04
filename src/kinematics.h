@@ -4,12 +4,15 @@
 #include <cmath>
 
 namespace gagatt {
-inline constexpr double lambda(double x, double y, double z) {
-    return x * x + y * y + z * z - 2.0 * (x * y + y * z + z * x);
+inline double lambda(double a, double b, double c) {
+    const double sqrt_b = std::sqrt(std::max(0.0, b));
+    const double sqrt_c = std::sqrt(std::max(0.0, c));
+    return (a - std::pow(sqrt_b + sqrt_c, 2)) *
+           (a - std::pow(sqrt_b - sqrt_c, 2));
 }
 
-inline double lambda12(double x, double y, double z) {
-    const double l = lambda(x, y, z);
+inline double lambda12(double a, double b, double c) {
+    const double l = lambda(a, b, c);
     return (l <= 0.0) ? 0.0 : std::sqrt(l);
 }
 }  // namespace gagatt

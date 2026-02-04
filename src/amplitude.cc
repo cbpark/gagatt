@@ -3,7 +3,6 @@
 #include <cmath>
 #include <complex>
 #include <functional>
-#include <limits>
 
 #include "constants.h"
 #include "helicity.h"
@@ -44,8 +43,7 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 
     // sin^2 + r*cos^2 is more stable than 1 - beta^2*cos^2
     const double denom = sin_th2 + r * cos_th2;
-    const double epsilon = std::numeric_limits<double>::epsilon();
-    if (denom < epsilon) { return {0.0, 0.0}; }
+    if (denom < 1e-18) { return {0.0, 0.0}; }
 
     const double beta = std::sqrt(beta2);
     const double sqrt_r = std::sqrt(r);  // sqrt(1 - beta2) = sqrt(r)
