@@ -6,7 +6,6 @@
 
 #include "constants.h"
 #include "helicity.h"
-#include "kinematics.h"
 
 #ifdef DEBUG
 #include <iostream>
