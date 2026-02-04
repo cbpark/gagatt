@@ -1,9 +1,8 @@
 #include "photon.h"
 #include <cmath>
-#include "amplitude.h"
 
 namespace gagatt {
-double fLumi(double x, double y, Helicity pe, Helicity pc) {
+double fLumi(double x, double y, double pe, double pc) {
     const double y_max = x / (1.0 + x);
     if (y < 0.0 || y >= y_max || y >= 1.0) { return 0.0; }
 
@@ -12,7 +11,7 @@ double fLumi(double x, double y, Helicity pe, Helicity pc) {
 
     const double om_y = 1.0 - y;
     const double r = y / (x * om_y);
-    const double pol = toDouble(pe) * toDouble(pc);
+    const double pol = pe * pc;
 
     double f = (1.0 / om_y) + om_y - 4.0 * r * (1.0 - r) -
                r * x * (2.0 * r - 1.0) * (2.0 - y) * pol;
@@ -20,7 +19,7 @@ double fLumi(double x, double y, Helicity pe, Helicity pc) {
     return f / sigma_c;
 }
 
-double sigmaC(double x, Helicity pe, Helicity pc) {
+double sigmaC(double x, double pe, double pc) {
     if (x < 1e-12) return 0.0;
 
     double c0, c1;
@@ -46,6 +45,6 @@ double sigmaC(double x, Helicity pe, Helicity pc) {
         c1 = (1.0 + 2.0 * inv_x) * log1px - (2.5 - inv_1px + 0.5 * inv_1px2);
     }
 
-    return c0 + toDouble(pe) * toDouble(pc) * c1;
+    return c0 + pe * pe * c1;
 }
 }  // namespace gagatt
