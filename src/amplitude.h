@@ -8,14 +8,28 @@
 namespace gagatt {
 using Amplitude = std::complex<double>;
 
-enum class Helicity { PLUS, MINUS };
+enum class Helicity { PLUS = 1, MINUS = -1, UNPOL = 0 };
 
 inline constexpr double toDouble(Helicity pol) {
-    return (pol == Helicity::PLUS) ? 1.0 : -1.0;
+    switch (pol) {
+    case Helicity::PLUS:
+        return 1.0;
+    case Helicity::MINUS:
+        return -1.0;
+    default:
+        return 0.0;
+    }
 }
 
-inline constexpr Helicity operator-(Helicity pol) {
-    return (pol == Helicity::PLUS) ? Helicity::MINUS : Helicity::PLUS;
+constexpr Helicity operator-(Helicity pol) {
+    switch (pol) {
+    case Helicity::PLUS:
+        return Helicity::MINUS;
+    case Helicity::MINUS:
+        return Helicity::PLUS;
+    default:
+        return pol;
+    }
 }
 
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,

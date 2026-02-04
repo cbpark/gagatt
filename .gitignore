@@ -3,6 +3,8 @@
 *.o
 *.out
 *.dat
+*.pdf
 .ccls-cache
 bin
 tmp
+data

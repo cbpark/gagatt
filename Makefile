@@ -4,7 +4,7 @@ BINDIR := bin
 CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) $(CXXFLAGS)
 LDFLAGS  := -lm
 
-EXENAME := gagatt lumi
+EXENAME := gagatt luminosity
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
 
