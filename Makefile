@@ -1,7 +1,8 @@
 SRCDIR := src
 BINDIR := bin
 
-CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) $(CXXFLAGS)
+CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) -MMD -MP \
+	$(CXXFLAGS)
 LDFLAGS  := -lm
 
 EXENAME := gagatt luminosity
@@ -25,5 +26,7 @@ $(BINDIR):
 
 clean:
 	rm -rf $(LIBOBJS) $(BINDIR)
+
+-include $(wildcard $(OBJDIR)/*.d)
 
 .PHONY: all clean
