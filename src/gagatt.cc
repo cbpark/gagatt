@@ -38,6 +38,7 @@ int main() {
 
     auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
     std::cout << "A: " << sdc.norm_factor << '\n';
+    std::cout << "C(nn): " << sdc.c_nn() << '\n';
     std::cout << "C(ij):\n" << sdc.cc << '\n';
 
     auto rho = gagatt::spinDensityMatrix(sqrt_s_hat, cos_th);

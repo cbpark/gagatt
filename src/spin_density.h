@@ -41,6 +41,10 @@ struct SDMatrixCoefficients {
     double norm_factor;
 
     SDMatrixCoefficients(double sqrt_s_hat, double cos_th);
+
+    double c_nn() const { return cc(0, 0) * norm_factor; }
+    double c_rr() const { return cc(1, 1) * norm_factor; }
+    double c_kk() const { return cc(2, 2) * norm_factor; }
 };
 
 Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th);
