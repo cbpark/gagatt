@@ -61,8 +61,7 @@ Amplitude computeAmp(const KinematicContext &ctx, Helicity l1, Helicity l2,
     return {ctx.overall_fac * amp, 0.0};
 }
 
-PolarizationCoefficients getPolCoeffs(double sqrt_s_hat,
-                                      double cos_th) {
+PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
     KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
     if (!ctx.valid) { return {}; }
 

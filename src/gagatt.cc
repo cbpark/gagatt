@@ -17,7 +17,7 @@ int main() {
     std::cout << "sqrt(s) = " << sqrt_s_hat << '\n';
     std::cout << "cos(theta) = " << cos_th << '\n';
 
-    auto coeffs = gagatt::getPolCoeffs(sqrt_s_hat, cos_th);
+    auto coeffs = gagatt::computePolCoeffs(sqrt_s_hat, cos_th);
 
     std::cout << "C1(on-shell) = " << coeffs.c1 << '\n';
     std::cout << "C2(on-shell) = " << coeffs.c2 << '\n';
@@ -36,6 +36,8 @@ int main() {
     std::cout << "C15(on-shell) = " << coeffs.c15 << '\n';
     std::cout << "C16(on-shell) = " << coeffs.c16 << '\n';
 
-    const auto rho = gagatt::spinDensityMatrix(sqrt_s_hat, cos_th);
-    std::cout << "C:\n " << rho.c_matrix << '\n';
+    std::cout << gagatt::I2I2 << '\n';
+
+    // auto rho = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
+    // std::cout << "C:\n " << rho.c_matrix << '\n';
 }
