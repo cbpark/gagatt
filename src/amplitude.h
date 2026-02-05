@@ -82,7 +82,7 @@ auto averageHelicities(F &&func) {
     return total * 0.25;
 }
 
-PolarizationCoefficients computeCoeffsOnShell(double sqrt_s_hat, double cos_th);
+PolarizationCoefficients getPolCoeffs(double sqrt_s_hat, double cos_th);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H
