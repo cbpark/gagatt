@@ -36,11 +36,17 @@ int main() {
     std::cout << "C15: " << coeffs.c15 << "$\n";
     std::cout << "C16: " << coeffs.c16 << "$\n";
 
-    auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
-    std::cout << "A: " << sdc.norm_factor << '\n';
-    std::cout << "C(nn): " << sdc.c_nn() << '\n';
-    std::cout << "C(ij):\n" << sdc.cc << '\n';
+    // auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
+    // std::cout << "A: " << sdc.norm_factor << '\n';
+    // std::cout << "C(nn): " << sdc.c_nn() << '\n';
+    // std::cout << "C(ij):\n" << sdc.cc << '\n';
 
     auto rho = gagatt::spinDensityMatrix(sqrt_s_hat, cos_th);
     std::cout << "rho:\n " << rho << '\n';
+
+    auto rho_t2 = gagatt::partialTransposeB(rho);
+    std::cout << "rho(T2):\n " << rho_t2 << '\n';
+
+    std::cout << "PH criterion: " << gagatt::isEntangled_PH(sqrt_s_hat, cos_th)
+              << '\n';
 }

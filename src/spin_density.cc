@@ -1,5 +1,10 @@
 #include "spin_density.h"
+#include <Eigen/Eigenvalues>
 #include "amplitude.h"
+
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 namespace gagatt {
 SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
@@ -43,5 +48,28 @@ Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
         sdc.cc(2, 0) * S3S1 + sdc.cc(2, 1) * S3S2 + sdc.cc(2, 2) * S3S3;
 
     return 0.25 * rho;
+}
+
+Matrix4cd partialTransposeB(const Matrix4cd &rho) {
+    Matrix4cd pt = rho;
+
+    // Transpose each 2x2 sub-block
+    pt.block<2, 2>(0, 0).transposeInPlace();
+    pt.block<2, 2>(0, 2).transposeInPlace();
+    pt.block<2, 2>(2, 0).transposeInPlace();
+    pt.block<2, 2>(2, 2).transposeInPlace();
+
+    return pt;
+}
+
+bool isEntangled_PH(const Matrix4cd &rho) {
+    Matrix4cd rhoPT = partialTransposeB(rho);
+
+    Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);
+#ifdef DEBUG
+    std::cerr << "isEntangled_PH:\n " << solver.eigenvalues() << '\n';
+#endif
+
+    return (solver.eigenvalues().array() < -1e-12).any();
 }
 }  // namespace gagatt
