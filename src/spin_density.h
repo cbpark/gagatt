@@ -18,12 +18,15 @@ inline const Matrix2cd S2 = (Matrix2cd() << 0, std::complex<double>(0, -1),
 inline const Matrix2cd S3 = (Matrix2cd() << 1, 0, 0, -1).finished();
 
 inline const Matrix4cd I2I2 = Matrix4cd::Identity();
+
 inline const Matrix4cd S1I2 = Eigen::kroneckerProduct(S1, I2).eval();
 inline const Matrix4cd S2I2 = Eigen::kroneckerProduct(S2, I2).eval();
 inline const Matrix4cd S3I2 = Eigen::kroneckerProduct(S3, I2).eval();
+
 inline const Matrix4cd I2S1 = Eigen::kroneckerProduct(I2, S1).eval();
 inline const Matrix4cd I2S2 = Eigen::kroneckerProduct(I2, S2).eval();
 inline const Matrix4cd I2S3 = Eigen::kroneckerProduct(I2, S3).eval();
+
 inline const Matrix4cd S1S1 = Eigen::kroneckerProduct(S1, S1).eval();
 inline const Matrix4cd S1S2 = Eigen::kroneckerProduct(S1, S2).eval();
 inline const Matrix4cd S1S3 = Eigen::kroneckerProduct(S1, S3).eval();

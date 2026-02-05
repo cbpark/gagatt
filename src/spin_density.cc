@@ -94,6 +94,7 @@ double getConcurrence(const Eigen::Matrix4cd &rho) {
     // sort lambdas in descending order: l1 >= l2 >= l3 >= l4
     std::sort(lambdas.begin(), lambdas.end(), std::greater<double>());
 
-    return std::max(0.0, lambdas[0] - lambdas[1] - lambdas[2] - lambdas[3]);
+    double c = lambdas[0] - lambdas[1] - lambdas[2] - lambdas[3];
+    return std::max(0.0, c);
 }
 }  // namespace gagatt
