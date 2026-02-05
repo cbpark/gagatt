@@ -5,7 +5,7 @@ CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) -MMD -MP \
 	$(CXXFLAGS)
 LDFLAGS  := -lm
 
-EXENAME := gagatt luminosity
+EXENAME := gagatt luminosity test
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
 
@@ -15,6 +15,10 @@ LIBOBJS := $(LIBSRCS:.cc=.o)
 # GSL
 CXXFLAGS += $(shell gsl-config --cflags)
 LDFLAGS  += $(shell gsl-config --libs)
+
+# Eigen
+EIGENPATH ?= /usr/include/eigen3
+CXXFLAGS  += -I$(EIGENPATH)
 
 all: $(TARGETS)
 
