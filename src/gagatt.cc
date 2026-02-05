@@ -47,6 +47,8 @@ int main() {
     auto rho_t2 = gagatt::partialTransposeB(rho);
     std::cout << "rho(T2):\n " << rho_t2 << '\n';
 
-    std::cout << "PH criterion: " << gagatt::isEntangled_PH(sqrt_s_hat, cos_th)
-              << '\n';
+    std::cout << "PH criterion: " << gagatt::isEntangled_PH(rho) << '\n';
+
+    std::cout << "Concurrence: " << gagatt::getConcurrence(rho) << '\n';
+    std::cout << "Conc criterion: " << gagatt::isEntangled_Conc(rho) << '\n';
 }

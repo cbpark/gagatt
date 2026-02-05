@@ -1,5 +1,8 @@
 #include "spin_density.h"
 #include <Eigen/Eigenvalues>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 #include "amplitude.h"
 
 #ifdef DEBUG
@@ -71,5 +74,26 @@ bool isEntangled_PH(const Matrix4cd &rho) {
 #endif
 
     return (solver.eigenvalues().array() < -1e-12).any();
+}
+
+double getConcurrence(const Eigen::Matrix4cd &rho) {
+    Matrix4cd rho_tilde = Basis::S2S2 * rho.conjugate() * Basis::S2S2;
+    Matrix4cd R = rho * rho_tilde;
+
+    Eigen::ComplexEigenSolver<Matrix4cd> solver(R);
+    auto e_vals = solver.eigenvalues();
+
+    std::vector<double> lambdas;
+    lambdas.reserve(4);
+    for (int i = 0; i < 4; ++i) {
+        // use real part (imaginary part should be numerical noise)
+        double val = std::max(0.0, e_vals[i].real());
+        lambdas.push_back(std::sqrt(val));
+    }
+
+    // sort lambdas in descending order: l1 >= l2 >= l3 >= l4
+    std::sort(lambdas.begin(), lambdas.end(), std::greater<double>());
+
+    return std::max(0.0, lambdas[0] - lambdas[1] - lambdas[2] - lambdas[3]);
 }
 }  // namespace gagatt

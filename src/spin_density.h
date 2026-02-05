@@ -53,10 +53,10 @@ Matrix4cd partialTransposeB(const Matrix4cd &rho);
 
 bool isEntangled_PH(const Matrix4cd &rho);
 
-inline bool isEntangled_PH(
-    double sqrt_s_hat, double cos_th) {
-    const auto rho = spinDensityMatrix(sqrt_s_hat, cos_th);
-    return isEntangled_PH(rho);
+double getConcurrence(const Matrix4cd &rho);
+
+inline bool isEntangled_Conc(const Matrix4cd &rho) {
+    return getConcurrence(rho) > 1e-12;
 }
 }  // namespace gagatt
 
