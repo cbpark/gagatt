@@ -19,24 +19,22 @@ int main() {
 
     auto coeffs = gagatt::computePolCoeffs(sqrt_s_hat, cos_th);
 
-    std::cout << "C1(on-shell) = " << coeffs.c1 << '\n';
-    std::cout << "C2(on-shell) = " << coeffs.c2 << '\n';
-    std::cout << "C3(on-shell) = " << coeffs.c3 << '\n';
-    std::cout << "C4(on-shell) = " << coeffs.c4 << '\n';
-    std::cout << "C5(on-shell) = " << coeffs.c5 << '\n';
-    std::cout << "C6(on-shell) = " << coeffs.c6 << '\n';
-    std::cout << "C7(on-shell) = " << coeffs.c7 << '\n';
-    std::cout << "C8(on-shell) = " << coeffs.c8 << '\n';
-    std::cout << "C9(on-shell) = " << coeffs.c9 << '\n';
-    std::cout << "C10(on-shell) = " << coeffs.c10 << '\n';
-    std::cout << "C11(on-shell) = " << coeffs.c11 << '\n';
-    std::cout << "C12(on-shell) = " << coeffs.c12 << '\n';
-    std::cout << "C13(on-shell) = " << coeffs.c13 << '\n';
-    std::cout << "C14(on-shell) = " << coeffs.c14 << '\n';
-    std::cout << "C15(on-shell) = " << coeffs.c15 << '\n';
-    std::cout << "C16(on-shell) = " << coeffs.c16 << '\n';
-
-    // std::cout << gagatt::I2I2 << '\n';
+    std::cout << "C1: " << coeffs.c1 << "$\n";
+    std::cout << "C2: " << coeffs.c2 << "$\n";
+    std::cout << "C3: " << coeffs.c3 << "$\n";
+    std::cout << "C4: " << coeffs.c4 << "$\n";
+    std::cout << "C5: " << coeffs.c5 << "$\n";
+    std::cout << "C6: " << coeffs.c6 << "$\n";
+    std::cout << "C7: " << coeffs.c7 << "$\n";
+    std::cout << "C8: " << coeffs.c8 << "$\n";
+    std::cout << "C9: " << coeffs.c9 << "$\n";
+    std::cout << "C10: " << coeffs.c10 << "$\n";
+    std::cout << "C11: " << coeffs.c11 << "$\n";
+    std::cout << "C12: " << coeffs.c12 << "$\n";
+    std::cout << "C13: " << coeffs.c13 << "$\n";
+    std::cout << "C14: " << coeffs.c14 << "$\n";
+    std::cout << "C15: " << coeffs.c15 << "$\n";
+    std::cout << "C16: " << coeffs.c16 << "$\n";
 
     auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
     std::cout << "A: " << sdc.norm_factor << '\n';
