@@ -37,12 +37,14 @@ const Matrix4cd S3S2 = Eigen::kroneckerProduct(S3, S2);
 const Matrix4cd S3S3 = Eigen::kroneckerProduct(S3, S3);
 
 struct SDMatrixCoefficients {
-    Eigen::Vector3d bp_matrix, bm_matrix;
-    Eigen::Matrix3d c_matrix;
+    Eigen::Vector3d bp, bm;
+    Eigen::Matrix3d cc;
     double norm_factor;
 
     SDMatrixCoefficients(double sqrt_s_hat, double cos_th);
 };
+
+Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th);
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H

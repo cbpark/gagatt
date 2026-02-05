@@ -36,8 +36,12 @@ int main() {
     std::cout << "C15(on-shell) = " << coeffs.c15 << '\n';
     std::cout << "C16(on-shell) = " << coeffs.c16 << '\n';
 
-    std::cout << gagatt::I2I2 << '\n';
+    // std::cout << gagatt::I2I2 << '\n';
 
-    // auto rho = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
-    // std::cout << "C:\n " << rho.c_matrix << '\n';
+    auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
+    std::cout << "A: " << sdc.norm_factor << '\n';
+    std::cout << "C(ij):\n" << sdc.cc << '\n';
+
+    auto rho = gagatt::spinDensityMatrix(sqrt_s_hat, cos_th);
+    std::cout << "rho:\n " << rho << '\n';
 }
