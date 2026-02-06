@@ -14,7 +14,8 @@ SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
     const auto pol = computePolCoeffs(sqrt_s_hat, cos_th);
 
     norm_factor = pol.c1 + pol.c3;
-    const double inv_norm = (norm_factor != 0.0) ? 1.0 / norm_factor : 0.0;
+    const double inv_norm =
+        (std::abs(norm_factor) > 1e-15) ? 1.0 / norm_factor : 0.0;
 
     // Polarization vectors (B+ and B-)
     bp << (pol.c6 + pol.c8), -(pol.c5 + pol.c7), (pol.c2 + pol.c4);
@@ -31,8 +32,7 @@ SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
     cc *= inv_norm;
 }
 
-Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
-    const SDMatrixCoefficients sdc(sqrt_s_hat, cos_th);
+Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc) {
     using namespace Basis;
 
     // rho = 1/4 ( I + Bp.sigma*I + I*Bm.sigma + C_ij sigma_i*sigma_j )

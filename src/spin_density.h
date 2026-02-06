@@ -50,7 +50,11 @@ struct SDMatrixCoefficients {
     double c_kk() const { return cc(2, 2) * norm_factor; }
 };
 
-Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th);
+Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc);
+
+inline Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
+    return spinDensityMatrix(SDMatrixCoefficients{sqrt_s_hat, cos_th});
+}
 
 Matrix4cd partialTransposeB(const Matrix4cd &rho);
 
