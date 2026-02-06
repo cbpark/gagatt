@@ -1,4 +1,5 @@
 #include "spin_density.h"
+#include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 #include <algorithm>
 #include <cmath>
@@ -65,7 +66,7 @@ Matrix4cd partialTransposeB(const Matrix4cd &rho) {
     return pt;
 }
 
-bool isEntangled_PH(const Matrix4cd &rho) {
+bool isEntangledPH(const Matrix4cd &rho) {
     Matrix4cd rhoPT = partialTransposeB(rho);
 
     Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);
@@ -96,5 +97,26 @@ double getConcurrence(const Eigen::Matrix4cd &rho) {
 
     double c = lambdas[0] - lambdas[1] - lambdas[2] - lambdas[3];
     return std::max(0.0, c);
+}
+
+bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
+#ifdef DEBUG
+    std::cerr << "\nviolatesBellInequality: Cij =\n" << sdc.cc << '\n';
+#endif
+    Eigen::Matrix3d M = sdc.cc * sdc.cc.transpose();
+#ifdef DEBUG
+    std::cerr << "violatesBellInequality: C C^T =\n" << M << '\n';
+#endif
+
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(M);
+
+    // Eigenvalues are returned in INCREASING order: e0 <= e1 <= e2
+    auto evals = solver.eigenvalues();
+
+    // Horodecki Condition: sum of the two largest eigenvalues > 1
+    double sum_two_largest = evals(2) + evals(1);
+
+    // Using a tiny epsilon for numerical stability
+    return sum_two_largest > 1.0 + 1e-15;
 }
 }  // namespace gagatt

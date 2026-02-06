@@ -1,7 +1,7 @@
 #ifndef SRC_SPIN_DENSITY_H
 #define SRC_SPIN_DENSITY_H
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <complex>
 #include <unsupported/Eigen/KroneckerProduct>
 
@@ -58,13 +58,15 @@ inline Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
 
 Matrix4cd partialTransposeB(const Matrix4cd &rho);
 
-bool isEntangled_PH(const Matrix4cd &rho);
+bool isEntangledPH(const Matrix4cd &rho);
 
 double getConcurrence(const Matrix4cd &rho);
 
-inline bool isEntangled_Conc(const Matrix4cd &rho) {
+inline bool isEntangledConcurrence(const Matrix4cd &rho) {
     return getConcurrence(rho) > 1e-12;
 }
+
+bool violatesBellInequality(const SDMatrixCoefficients& sdc);
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H
