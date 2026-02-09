@@ -108,7 +108,8 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
     std::cerr << "violatesBellInequality: C C^T =\n" << M << '\n';
 #endif
 
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(M);
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
+        M, Eigen::EigenvaluesOnly);
 
     // Eigenvalues are returned in INCREASING order: e0 <= e1 <= e2
     auto evals = solver.eigenvalues();

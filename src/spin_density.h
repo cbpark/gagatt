@@ -1,9 +1,18 @@
 #ifndef SRC_SPIN_DENSITY_H
 #define SRC_SPIN_DENSITY_H
 
-#include <Eigen/Dense>
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+#include <Eigen/Core>
 #include <complex>
 #include <unsupported/Eigen/KroneckerProduct>
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace gagatt {
 using Matrix2cd = Eigen::Matrix2cd;
