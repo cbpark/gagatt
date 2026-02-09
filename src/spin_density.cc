@@ -120,4 +120,11 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
     // Using a tiny epsilon for numerical stability
     return sum_two_largest > 1.0 + 1e-15;
 }
+
+bool isEntangledByD(const SDMatrixCoefficients &sdc) {
+    double trace_c = sdc.cc.trace();
+
+    // Using a small epsilon for numerical stability.
+    return std::abs(trace_c) > 1.0 + 1e-15;
+}
 }  // namespace gagatt

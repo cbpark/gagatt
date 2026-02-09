@@ -55,4 +55,6 @@ int main() {
 
     std::cout << "Violation of Bell inequality: "
               << gagatt::violatesBellInequality(sdc) << '\n';
+
+    std::cout << "Tr[C]: " << gagatt::isEntangledByD(sdc) << '\n';
 }

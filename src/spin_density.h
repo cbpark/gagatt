@@ -50,6 +50,7 @@ inline const Matrix4cd S3S3 = Eigen::kroneckerProduct(S3, S3).eval();
 struct SDMatrixCoefficients {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+    // The coefficients are normalized by A = C_1 + C_3.
     Eigen::Vector3d bp, bm;
     Eigen::Matrix3d cc;
     double norm_factor;
@@ -77,7 +78,9 @@ inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
     return getConcurrence(rho) > 1e-12;
 }
 
-bool violatesBellInequality(const SDMatrixCoefficients& sdc);
+bool violatesBellInequality(const SDMatrixCoefficients &sdc);
+
+bool isEntangledByD(const SDMatrixCoefficients &sdc);
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H
