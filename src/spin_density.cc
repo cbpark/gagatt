@@ -117,7 +117,7 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
     // Horodecki Condition: sum of the two largest eigenvalues > 1
     double sum_two_largest = evals(2) + evals(1);
 
-    // Using a tiny epsilon for numerical stability
+    // Using a small epsilon for numerical stability
     return sum_two_largest > 1.0 + 1e-15;
 }
 

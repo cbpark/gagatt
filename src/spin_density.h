@@ -75,6 +75,8 @@ bool isEntangledByPH(const Matrix4cd &rho);
 double getConcurrence(const Matrix4cd &rho);
 
 inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
+    // eigenvalue solvers for 4x4 complex matrices typically accumulate more
+    // numerical noise than 3x3 real symmetric solvers.
     return getConcurrence(rho) > 1e-12;
 }
 
