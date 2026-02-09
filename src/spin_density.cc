@@ -66,7 +66,7 @@ Matrix4cd partialTransposeB(const Matrix4cd &rho) {
     return pt;
 }
 
-bool isEntangledPH(const Matrix4cd &rho) {
+bool isEntangledByPH(const Matrix4cd &rho) {
     Matrix4cd rhoPT = partialTransposeB(rho);
 
     Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);

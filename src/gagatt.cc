@@ -47,10 +47,10 @@ int main() {
     auto rho_t2 = gagatt::partialTransposeB(rho);
     std::cout << "rho(T2):\n " << rho_t2 << '\n';
 
-    std::cout << "PH criterion: " << gagatt::isEntangledPH(rho) << '\n';
+    std::cout << "PH criterion: " << gagatt::isEntangledByPH(rho) << '\n';
 
     std::cout << "Concurrence: " << gagatt::getConcurrence(rho) << '\n';
-    std::cout << "Conc criterion: " << gagatt::isEntangledConcurrence(rho)
+    std::cout << "Conc criterion: " << gagatt::isEntangledByConcurrence(rho)
               << '\n';
 
     std::cout << "Violation of Bell inequality: "

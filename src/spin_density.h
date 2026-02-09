@@ -69,11 +69,11 @@ inline Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
 
 Matrix4cd partialTransposeB(const Matrix4cd &rho);
 
-bool isEntangledPH(const Matrix4cd &rho);
+bool isEntangledByPH(const Matrix4cd &rho);
 
 double getConcurrence(const Matrix4cd &rho);
 
-inline bool isEntangledConcurrence(const Matrix4cd &rho) {
+inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
     return getConcurrence(rho) > 1e-12;
 }
 
