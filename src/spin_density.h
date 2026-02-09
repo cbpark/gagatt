@@ -48,6 +48,8 @@ inline const Matrix4cd S3S3 = Eigen::kroneckerProduct(S3, S3).eval();
 }  // namespace Basis
 
 struct SDMatrixCoefficients {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     Eigen::Vector3d bp, bm;
     Eigen::Matrix3d cc;
     double norm_factor;
