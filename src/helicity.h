@@ -8,8 +8,15 @@ inline constexpr double toDouble(Helicity pol) {
     return static_cast<double>(pol);
 }
 
-inline constexpr Helicity toHelicity(double val) {
-    return val > 0.0 ? Helicity::PLUS : Helicity::MINUS;
+inline Helicity toHelicity(double val) {
+    constexpr double eps = 1.0e-10;
+    if (val > eps) {
+        return Helicity::PLUS;
+    } else if (val < -eps) {
+        return Helicity::MINUS;
+    } else {
+        return Helicity::UNPOL;
+    }
 }
 
 inline constexpr Helicity operator-(Helicity pol) {
