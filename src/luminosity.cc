@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <array>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -7,8 +6,8 @@
 #include "helicity.h"
 #include "photon.h"
 
-const double X = 4.8;
-const int NP = 250;
+constexpr double X = 4.8;
+constexpr int NP = 250;
 
 auto parse_double(const char *str, const char *name = "value")
     -> std::optional<double> {
@@ -21,21 +20,15 @@ auto parse_double(const char *str, const char *name = "value")
     }
 }
 
-void printInput(double pe1, double pe2, double l1, double l2) {
-    std::cout << "luminosity: (pe1, pe2) = (" << pe1 << ", " << pe2 << "), "
-              << "(l1, l2) = (" << l1 << ", " << l2 << ")\n";
-}
-
 int main(int argc, char *argv[]) {
-    if (!(argc == 6)) {
+    if (argc != 6) {
         std::cerr
             << "usage: ./bin/luminosity <output.dat> <pe1> <pe2> <l1> <l2>\n"
             << "  <output.dat>: output file name.\n"
             << "  <pe1> <pe2>: pols of initial electrons.\n"
             << "  <l1> <l2>: pols of colliding photons.\n";
-        return 1;
+        return EXIT_FAILURE;
     }
-    std::ofstream fout(argv[1]);
 
     auto pe1_ = parse_double(argv[2], "pe1");
     auto pe2_ = parse_double(argv[3], "pe2");
@@ -43,26 +36,31 @@ int main(int argc, char *argv[]) {
     auto l2_ = parse_double(argv[5], "l2");
     if (!pe1_ || !pe2_ || !l1_ || !l2_) { return EXIT_FAILURE; }
 
-    double pe1 = *pe1_;
-    double pe2 = *pe2_;
-    double pc1 = -pe1;
-    double pc2 = -pe2;
+    const double pe1 = *pe1_;
+    const double pe2 = *pe2_;
+    const double pc1 = -pe1;
+    const double pc2 = -pe2;
 
-    auto l1 = gagatt::toHelicity(l1_.value());
-    auto l2 = gagatt::toHelicity(l2_.value());
+    const auto l1 = gagatt::toHelicity(*l1_);
+    const auto l2 = gagatt::toHelicity(*l2_);
 
-    printInput(pe1, pe2, l1_.value(), l2_.value());
+    std::cout << "luminosity: (pe1, pe2) = (" << pe1 << ", " << pe2 << "), "
+              << "(l1, l2) = (" << *l1_ << ", " << *l2_ << ")\n";
 
-    std::array<double, NP> z{}, lumi{};
+    std::ofstream fout(argv[1]);
+    if (!fout) {
+        std::cerr << "Failed to open " << argv[1] << '\n';
+        return EXIT_FAILURE;
+    }
+
     for (int i = 0; i < NP; ++i) {
-        z[i] = static_cast<double>(i + 1) / NP;
-        lumi[i] =
-            gagatt::photonLuminosity(z[i], X, pe1, pc1, pe2, pc2, {l1}, {l2});
+        const double z = static_cast<double>(i + 1) / NP;
+        const double lumi =
+            gagatt::photonLuminosity(z, X, pe1, pc1, pe2, pc2, l1, l2);
 
-        fout << z[i] << "  " << lumi[i] << '\n';
+        fout << z << "  " << lumi << '\n';
     }
 
     std::cout << "luminosity: the output has been stored in " << argv[1]
               << '\n';
-    fout.close();
 }
