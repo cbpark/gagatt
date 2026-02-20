@@ -55,12 +55,8 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < NP; ++i) {
         const double z = static_cast<double>(i + 1) / NP;
-        double lumi;
-        if (l1 == gagatt::Helicity::UNPOL && l2 == gagatt::Helicity::UNPOL) {
-            lumi = gagatt::photonLuminosityUnpol(z, X, pe1, pc1, pe2, pc2);
-        } else {
-            lumi = gagatt::photonLuminosity(z, X, pe1, pc1, pe2, pc2, l1, l2);
-        }
+        const double lumi =
+            gagatt::photonLuminosity(z, X, pe1, pc1, pe2, pc2, l1, l2);
 
         fout << z << "  " << lumi << '\n';
     }
