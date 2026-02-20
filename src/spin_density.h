@@ -72,6 +72,8 @@ Matrix4cd partialTransposeB(const Matrix4cd &rho);
 
 bool isEntangledByPH(const Matrix4cd &rho);
 
+double negativity(const Matrix4cd &rho);
+
 double getConcurrence(const Matrix4cd &rho);
 
 inline bool isEntangledByConcurrence(const Matrix4cd &rho) {

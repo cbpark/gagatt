@@ -77,6 +77,14 @@ bool isEntangledByPH(const Matrix4cd &rho) {
     return (solver.eigenvalues().array() < -1e-12).any();
 }
 
+double negativity(const Matrix4cd &rho) {
+    Matrix4cd rhoPT = partialTransposeB(rho);
+
+    Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);
+    auto evals = solver.eigenvalues().array();
+    return (evals < -1e-12).select(evals.abs(), 0.0).sum();
+}
+
 double getConcurrence(const Eigen::Matrix4cd &rho) {
     Matrix4cd rho_tilde = Basis::S2S2 * rho.conjugate() * Basis::S2S2;
     Matrix4cd R = rho * rho_tilde;
