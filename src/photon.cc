@@ -151,8 +151,8 @@ double photonLuminosity(double z, double x, double pe1, double pc1, double pe2,
 
     const auto pol_corr = computePolCor(z, x, pe1, pc1, pe2, pc2);
 
-    const double l1_val = toDouble(l1.value_or(Helicity::UNPOL));
-    const double l2_val = toDouble(l2.value_or(Helicity::UNPOL));
+    const double l1_val = l1 ? toDouble(*l1) : 0.0;
+    const double l2_val = l2 ? toDouble(*l2) : 0.0;
 
     // Combine components: L = (C00 + l1*C20 + l2*C02 + l1*l2*C22) / (sigma1 *
     // sigma2)

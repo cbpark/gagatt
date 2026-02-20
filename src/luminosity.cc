@@ -17,6 +17,9 @@ auto parse_double(const char *str, const char *name = "value")
         std::cerr << "Invalid argument for " << name << ": " << e.what()
                   << '\n';
         return std::nullopt;
+    } catch (const std::out_of_range &e) {
+        std::cerr << "Out of range for " << name << ": " << e.what() << '\n';
+        return std::nullopt;
     }
 }
 
