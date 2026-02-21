@@ -12,8 +12,9 @@ int main() {
     std::cout << "Hello, world!\n";
     std::cout << "M(top) = " << gagatt::MTOP << '\n';
 
-    const double sqrt_s_hat = 400.0;
-    const double cos_th = std::cos(45.0 * std::numbers::pi / 180.0);
+    const double sqrt_s_hat = 346.0;
+    // const double cos_th = std::cos(45.0 * std::numbers::pi / 180.0);
+    const double cos_th = -0.99;
     std::cout << "sqrt(s) = " << sqrt_s_hat << '\n';
     std::cout << "cos(theta) = " << cos_th << '\n';
 
