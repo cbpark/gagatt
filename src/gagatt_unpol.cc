@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "Failed to open " << argv[1] << '\n';
         return EXIT_FAILURE;
     }
-    fout << "# cos(theta)\tsqrt(s_hat)\trho_t2\tconcurrence\ttr[C]\n";
+    fout << "# cos(theta)\tsqrt(s_hat)\trho_t2\tconcurrence\ttr_c\tbell\n";
 
     const double d_cos = (COS_TH_MAX - COS_TH_MIN) / N_COS;
     const double d_sqrts = (SQRTS_MAX - SQRTS_MIN) / N_SQRTS;
@@ -38,10 +38,12 @@ int main(int argc, char *argv[]) {
             const auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
             const auto rho = gagatt::spinDensityMatrix(sdc);
 
-            fout << std::format("{:.2f}\t{:>12.4f}\t{:d}\t{:d}\t{:d}\n", cos_th,
-                                sqrt_s_hat, gagatt::isEntangledByPH(rho),
+            fout << std::format("{:.2f}\t{:>12.4f}\t{:d}\t{:d}\t{:d}\t{:d}\n",
+                                cos_th, sqrt_s_hat,
+                                gagatt::isEntangledByPH(rho),
                                 gagatt::isEntangledByConcurrence(rho),
-                                gagatt::isEntangledByD(sdc));
+                                gagatt::isEntangledByD(sdc),
+                                gagatt::violatesBellInequality(sdc));
         }
     }
 
