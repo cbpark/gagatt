@@ -6,8 +6,8 @@
 
 // constexpr int N_COS = 100;
 // constexpr int N_SQRTS = 50;
-constexpr int N_COS = 100;
-constexpr int N_SQRTS = 1000;
+constexpr int N_COS = 200;
+constexpr int N_SQRTS = 2000;
 constexpr int N_TOTAL = N_COS * N_SQRTS;
 
 constexpr double COS_TH_MIN = -1.0;
@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
                 std::cout << std::format("-- progress: {} / {}\n", np, N_TOTAL);
             }
         }
+        fout << '\n';  // blank line = scanline separator for pm3d
     }
 
     std::cout << std::format("gagatt_unpol: the output has been stored in {}\n",
