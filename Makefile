@@ -5,7 +5,7 @@ CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) -MMD -MP \
 	$(CXXFLAGS)
 LDFLAGS  := -lm
 
-EXENAME := luminosity test
+EXENAME := gagatt_unpol luminosity test
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
 
