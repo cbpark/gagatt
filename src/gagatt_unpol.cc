@@ -7,7 +7,7 @@
 // constexpr int N_COS = 10;
 // constexpr int N_SQRTS = 10;
 constexpr int N_COS = 100;
-constexpr int N_SQRTS = 800;
+constexpr int N_SQRTS = 1000;
 
 constexpr double COS_TH_MIN = -1.0;
 constexpr double COS_TH_MAX = 1.0;
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
             const auto sdc = gagatt::SDMatrixCoefficients(sqrt_s_hat, cos_th);
             const auto rho = gagatt::spinDensityMatrix(sdc);
 
-            fout << std::format("{:.2f}\t{:>12.5f}\t{:d}\t{:d}\t{:d}\n", cos_th,
+            fout << std::format("{:.2f}\t{:>12.4f}\t{:d}\t{:d}\t{:d}\n", cos_th,
                                 sqrt_s_hat, gagatt::isEntangledByPH(rho),
                                 gagatt::isEntangledByConcurrence(rho),
                                 gagatt::isEntangledByD(sdc));
