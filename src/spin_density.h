@@ -106,6 +106,8 @@ bool isEntangledByD(const SDMatrixCoefficients &sdc);
 // Horodecki measure (numeric value, not just bool)
 double horodeckiMeasure(const SDMatrixCoefficients &sdc);
 
+double entanglementMarker(const SDMatrixCoefficients &sdc);
+
 // weighted SDMatrixCoefficients constructor
 template <typename W>
 SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,

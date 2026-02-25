@@ -155,4 +155,8 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
     auto evals = solver.eigenvalues();
     return evals(2) + evals(1);
 }
+
+double entanglementMarker(const SDMatrixCoefficients &sdc) {
+    return sdc.cc.trace() / 3.0;
+}
 }  // namespace gagatt
