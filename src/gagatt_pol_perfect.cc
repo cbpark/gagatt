@@ -12,33 +12,56 @@ constexpr double SQRTS_MAX = 2000.0;
 
 using namespace gagatt;
 
-int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        std::cerr
-            << "usage: ./bin/gagatt_pol_perfect <output.dat> N_COS N_SQRTS\n"
-            << "  <output.dat>: output file name.\n"
-            << "  N_COS: the size of grid for cos(Theta)\n"
-            << "  N_SQRTS: the size of grid for sqrt(s)\n";
-        return EXIT_FAILURE;
-    }
+struct HelicityMode {
+    const char *tag;  // "pp", "pm", "mp", "mm"
+    Helicity h1, h2;
+};
 
-    std::ofstream fout(argv[1]);
+constexpr HelicityMode MODES[] = {{"pp", Helicity::PLUS, Helicity::PLUS},
+                                  {"pm", Helicity::PLUS, Helicity::MINUS},
+                                  {"mp", Helicity::MINUS, Helicity::PLUS},
+                                  {"mm", Helicity::MINUS, Helicity::MINUS}};
+
+using WeightFn = double (*)(Helicity, Helicity);
+
+template <Helicity H1, Helicity H2>
+double fixedWeight(Helicity l1, Helicity l2) {
+    return (l1 == H1 && l2 == H2) ? 1.0 : 0.0;
+}
+
+WeightFn weightFor(Helicity h1, Helicity h2) {
+    if (h1 == Helicity::PLUS && h2 == Helicity::PLUS) {
+        return &fixedWeight<Helicity::PLUS, Helicity::PLUS>;
+    }
+    if (h1 == Helicity::MINUS && h2 == Helicity::MINUS) {
+        return &fixedWeight<Helicity::MINUS, Helicity::MINUS>;
+    }
+    if (h1 == Helicity::PLUS && h2 == Helicity::MINUS) {
+        return &fixedWeight<Helicity::PLUS, Helicity::MINUS>;
+    }
+    return &fixedWeight<Helicity::MINUS, Helicity::PLUS>;
+}
+
+void run(const HelicityMode &mode, const std::string &fname, int N_COS,
+         int N_SQRTS) {
+    std::ofstream fout(fname);
     if (!fout) {
-        std::cerr << "Failed to open " << argv[1] << '\n';
-        return EXIT_FAILURE;
+        std::cerr << "Failed to open " << fname << '\n';
+        return;
     }
-    fout << "# (1) cos(theta) (2) sqrt(s_hat) (3) negativity (4) concurrence "
-            "(5) horodecki (6) marker\n";
 
-    const int N_COS = std::stoi(argv[2]);
-    const int N_SQRTS = std::stoi(argv[3]);
+    fout << std::format(
+        "# helicity: ({}{})\n"
+        "# (1) cos(theta) (2) sqrt(s_hat) (3) negativity "
+        "(4) concurrence (5) horodecki (6) marker\n",
+        (mode.h1 == Helicity::PLUS ? '+' : '-'),
+        (mode.h2 == Helicity::PLUS ? '+' : '-'));
+
     const int N_TOTAL = N_COS * N_SQRTS;
     const double d_cos = (COS_TH_MAX - COS_TH_MIN) / N_COS;
     const double d_sqrts = (SQRTS_MAX - SQRTS_MIN) / N_SQRTS;
 
-    const auto weight = [&](Helicity l1, Helicity l2) {
-        return (l1 == Helicity::PLUS && l2 == Helicity::PLUS) ? 1.0 : 0.0;
-    };
+    WeightFn wfn = weightFor(mode.h1, mode.h2);
 
     for (int i = 0; i < N_COS; ++i) {
         const double cos_th = COS_TH_MIN + (i + 0.5) * d_cos;
@@ -46,23 +69,51 @@ int main(int argc, char *argv[]) {
         for (int j = 0; j < N_SQRTS; ++j) {
             const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
 
-            // Fixed (++) helicity
-            SDMatrixCoefficients sdc_pp(sqrt_s_hat, cos_th, weight);
-
-            auto rho_pp = spinDensityMatrix(sdc_pp);
+            SDMatrixCoefficients sdc(sqrt_s_hat, cos_th, wfn);
+            auto rho = spinDensityMatrix(sdc);
 
             fout << std::format(
-                "{:.2f}{:>12.4f}{:>8.4f}{:>8.4f}{:>8.4f}{:>9.4f}\n", cos_th,
-                sqrt_s_hat, negativity(rho_pp), getConcurrence(rho_pp),
-                horodeckiMeasure(sdc_pp), entanglementMarker(sdc_pp));
+                "{:.2f}{:>12.4f}{:>12.8f}{:>12.8f}{:>12.8f}{:>10.6f}\n", cos_th,
+                sqrt_s_hat, negativity(rho), getConcurrence(rho),
+                horodeckiMeasure(sdc), entanglementMarker(sdc));
 
             if (const int np = i * N_SQRTS + j + 1; np % 1000 == 0) {
-                std::cout << std::format("-- progress: {} / {}\n", np, N_TOTAL);
+                std::cout << std::format("-- [{}] progress: {} / {}\n",
+                                         mode.tag, np, N_TOTAL);
             }
         }
         fout << '\n';  // blank line = scanline separator for pm3d
     }
 
-    std::cout << "gagatt_pol_perfect: the output has been stored in " << argv[1]
-              << '\n';
+    std::cout << "gagatt_pol_perfect: " << fname << " written.\n";
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 5) {
+        std::cerr << "usage: ./bin/gagatt_pol_perfect <output.dat> N_COS "
+                     "N_SQRTS <mode>\n"
+                  << "  <output.dat>: output file name.\n"
+                  << "  N_COS: the size of grid for cos(Theta)\n"
+                  << "  N_SQRTS: the size of grid for sqrt(s)\n"
+                  << "  <mode>: pp | pm | mp | mm\n";
+        return EXIT_FAILURE;
+    }
+
+    const int N_COS = std::stoi(argv[2]);
+    const int N_SQRTS = std::stoi(argv[3]);
+    const std::string mode = argv[4];
+
+    bool found = false;
+    for (const auto &m : MODES) {
+        if (mode == m.tag) {
+            run(m, argv[1], N_COS, N_SQRTS);
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        std::cerr << "Unknown mode '" << mode
+                  << "'. Choose from: pp pm mp mm\n";
+        return EXIT_FAILURE;
+    }
 }
