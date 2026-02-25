@@ -11,9 +11,9 @@
 #endif
 
 namespace gagatt {
-SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
-    const auto pol = computePolCoeffs(sqrt_s_hat, cos_th);
-
+void normaliseFromPol(const PolarizationCoefficients &pol, Eigen::Vector3d &bp,
+                      Eigen::Vector3d &bm, Eigen::Matrix3d &cc,
+                      double &norm_factor) {
     norm_factor = pol.c1 + pol.c3;
     const double inv_norm =
         (std::abs(norm_factor) > 1e-15) ? 1.0 / norm_factor : 0.0;
@@ -21,7 +21,6 @@ SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
     // Polarization vectors (B+ and B-)
     bp << (pol.c6 + pol.c8), -(pol.c5 + pol.c7), (pol.c2 + pol.c4);
     bm << (pol.c6 - pol.c8), -(pol.c5 - pol.c7), -(pol.c2 - pol.c4);
-
     bp *= inv_norm;
     bm *= inv_norm;
 
@@ -29,8 +28,18 @@ SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
     cc << (pol.c13 - pol.c15), -(pol.c14 + pol.c16), -(pol.c10 + pol.c12),
         (pol.c14 - pol.c16), (pol.c13 + pol.c15), (pol.c9 + pol.c11),
         (pol.c10 - pol.c12), -(pol.c9 - pol.c11), -(pol.c1 - pol.c3);
-
     cc *= inv_norm;
+}
+
+SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th) {
+    const auto pol = computePolCoeffs(sqrt_s_hat, cos_th);
+    normaliseFromPol(pol, bp, bm, cc, norm_factor);
+}
+
+// construct from pre-computed PolarizationCoefficients
+SDMatrixCoefficients::SDMatrixCoefficients(
+    const PolarizationCoefficients &pol) {
+    normaliseFromPol(pol, bp, bm, cc, norm_factor);
 }
 
 Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc) {
@@ -68,18 +77,15 @@ Matrix4cd partialTransposeB(const Matrix4cd &rho) {
 
 bool isEntangledByPH(const Matrix4cd &rho) {
     Matrix4cd rhoPT = partialTransposeB(rho);
-
     Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);
 #ifdef DEBUG
     std::cerr << "isEntangled_PH:\n " << solver.eigenvalues() << '\n';
 #endif
-
     return (solver.eigenvalues().array() < -1e-12).any();
 }
 
 double negativity(const Matrix4cd &rho) {
     Matrix4cd rhoPT = partialTransposeB(rho);
-
     Eigen::SelfAdjointEigenSolver<Matrix4cd> solver(rhoPT);
     auto evals = solver.eigenvalues().array();
     return (evals < -1e-12).select(evals.abs(), 0.0).sum();
@@ -139,5 +145,14 @@ bool isEntangledByD(const SDMatrixCoefficients &sdc) {
 
     // Using a small epsilon for numerical stability.
     return std::abs(trace_c) > 1.0 + 1e-15;
+}
+
+double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
+    Eigen::Matrix3d M = sdc.cc * sdc.cc.transpose();
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
+        M, Eigen::EigenvaluesOnly);
+    // eigenvalues in ascending order: e0 <= e1 <= e2
+    auto evals = solver.eigenvalues();
+    return evals(2) + evals(1);
 }
 }  // namespace gagatt

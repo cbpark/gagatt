@@ -14,6 +14,8 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include "amplitude.h"  // for the weighted template
+
 namespace gagatt {
 using Matrix2cd = Eigen::Matrix2cd;
 using Matrix4cd = Eigen::Matrix<std::complex<double>, 4, 4>;
@@ -55,17 +57,32 @@ struct SDMatrixCoefficients {
     Eigen::Matrix3d cc;
     double norm_factor;
 
+    // uniform 1/4 average.
     SDMatrixCoefficients(double sqrt_s_hat, double cos_th);
 
-    double c_nn() const { return cc(0, 0) * norm_factor; }
-    double c_rr() const { return cc(1, 1) * norm_factor; }
-    double c_kk() const { return cc(2, 2) * norm_factor; }
+    // construct from pre-computed PolarizationCoefficients
+    explicit SDMatrixCoefficients(const PolarizationCoefficients &pol);
+
+    // weighted constructor
+    template <typename W>
+    SDMatrixCoefficients(double sqrt_s_hat, double cos_th, W &&weight);
+
+    double c_hat_nn() const { return cc(0, 0) * norm_factor; }
+    double c_hat_rr() const { return cc(1, 1) * norm_factor; }
+    double c_hat_kk() const { return cc(2, 2) * norm_factor; }
 };
 
 Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc);
 
 inline Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th) {
     return spinDensityMatrix(SDMatrixCoefficients{sqrt_s_hat, cos_th});
+}
+
+template <typename W>
+inline Matrix4cd spinDensityMatrix(double sqrt_s_hat, double cos_th,
+                                   W &&weight) {
+    return spinDensityMatrix(
+        SDMatrixCoefficients{sqrt_s_hat, cos_th, std::forward<W>(weight)});
 }
 
 Matrix4cd partialTransposeB(const Matrix4cd &rho);
@@ -85,6 +102,16 @@ inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
 bool violatesBellInequality(const SDMatrixCoefficients &sdc);
 
 bool isEntangledByD(const SDMatrixCoefficients &sdc);
+
+// Horodecki measure (numeric value, not just bool)
+double horodeckiMeasure(const SDMatrixCoefficients &sdc);
+
+// weighted SDMatrixCoefficients constructor
+template <typename W>
+SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
+                                           W &&weight)
+    : SDMatrixCoefficients(
+          computePolCoeffs(sqrt_s_hat, cos_th, std::forward<W>(weight))) {}
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H
