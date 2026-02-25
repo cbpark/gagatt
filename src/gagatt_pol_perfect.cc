@@ -15,6 +15,8 @@ constexpr double SQRTS_MAX = 500.0;
 constexpr double d_cos = (COS_TH_MAX - COS_TH_MIN) / N_COS;
 constexpr double d_sqrts = (SQRTS_MAX - SQRTS_MIN) / N_SQRTS;
 
+using namespace gagatt;
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         std::cerr << "usage: ./bin/gagatt_pol_perfect <output.dat>\n";
@@ -33,7 +35,17 @@ int main(int argc, char *argv[]) {
         for (int j = 0; j < N_SQRTS; ++j) {
             const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
 
-            fout << std::format("{:.2f}\t{:>12.4f}\n", cos_th, sqrt_s_hat);
+            // Fixed (++) helicity
+            SDMatrixCoefficients sdc_pp(
+                sqrt_s_hat, cos_th, [](Helicity l1, Helicity l2) -> double {
+                    return (l1 == Helicity::PLUS && l2 == Helicity::PLUS) ? 1.0
+                                                                          : 0.0;
+                });
+
+            auto rho_pp = spinDensityMatrix(sdc_pp);
+
+            fout << std::format("{:.2f}\t{:>12.4f}\t{}\n", cos_th, sqrt_s_hat,
+                                negativity(rho_pp));
 
             if (const int np = i * N_SQRTS + j + 1; np % 1000 == 0) {
                 std::cout << std::format("-- progress: {} / {}\n", np, N_TOTAL);
