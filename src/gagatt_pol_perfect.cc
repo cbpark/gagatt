@@ -27,12 +27,18 @@ int main(int argc, char *argv[]) {
         std::cerr << "Failed to open " << argv[1] << '\n';
         return EXIT_FAILURE;
     }
+    fout << "# (1) cos(theta) (2) sqrt(s_hat) (3) negativity (4) concurrence "
+            "(5) horodecki (6) marker\n";
 
     const int N_COS = std::stoi(argv[2]);
     const int N_SQRTS = std::stoi(argv[3]);
     const int N_TOTAL = N_COS * N_SQRTS;
     const double d_cos = (COS_TH_MAX - COS_TH_MIN) / N_COS;
     const double d_sqrts = (SQRTS_MAX - SQRTS_MIN) / N_SQRTS;
+
+    const auto weight = [&](Helicity l1, Helicity l2) {
+        return (l1 == Helicity::PLUS && l2 == Helicity::PLUS) ? 1.0 : 0.0;
+    };
 
     for (int i = 0; i < N_COS; ++i) {
         const double cos_th = COS_TH_MIN + (i + 0.5) * d_cos;
@@ -41,11 +47,7 @@ int main(int argc, char *argv[]) {
             const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
 
             // Fixed (++) helicity
-            SDMatrixCoefficients sdc_pp(
-                sqrt_s_hat, cos_th, [](Helicity l1, Helicity l2) -> double {
-                    return (l1 == Helicity::PLUS && l2 == Helicity::PLUS) ? 1.0
-                                                                          : 0.0;
-                });
+            SDMatrixCoefficients sdc_pp(sqrt_s_hat, cos_th, weight);
 
             auto rho_pp = spinDensityMatrix(sdc_pp);
 
