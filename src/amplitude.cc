@@ -6,6 +6,10 @@
 #include "constants.h"
 #include "helicity.h"
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 namespace gagatt {
 // Internal helper to avoid redundant kinematic calculations
 struct KinematicContext {
@@ -117,6 +121,12 @@ PolarizationCoefficients computePolCoeffsWeighted(
                                      {Helicity::MINUS, Helicity::MINUS}};
 
     PolarizationCoefficients total{};
+
+#ifdef DEBUG
+    std::cout << "computePolCoeffsWeighted: weight(++, +-, -+, --) = "
+              << weights[0] << ", " << weights[1] << ", " << weights[2] << ", "
+              << weights[3] << '\n';
+#endif
     for (int i = 0; i < 4; ++i) {
         total += polCoeffsForHelicity(ctx, hels[i][0], hels[i][1]) * weights[i];
     }
