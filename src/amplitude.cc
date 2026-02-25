@@ -1,6 +1,7 @@
 #include "amplitude.h"
 #include <cmath>
 #include <complex>
+#include <utility>
 #include "constants.h"
 #include "helicity.h"
 
@@ -61,43 +62,66 @@ Amplitude computeAmp(const KinematicContext &ctx, Helicity l1, Helicity l2,
     return {ctx.overall_fac * amp, 0.0};
 }
 
+// Per-(l1, l2) polarization coefficients — no averaging, no weighting.
+PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &ctx,
+                                              Helicity l1, Helicity l2) {
+    const auto pp = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
+    const auto mm = computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::MINUS);
+    const auto mp = computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::PLUS);
+    const auto pm = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::MINUS);
+
+    const double pp2 = std::norm(pp), mm2 = std::norm(mm);
+    const double mp2 = std::norm(mp), pm2 = std::norm(pm);
+
+    return {
+        pp2 + mm2,                                 // c1
+        pp2 - mm2,                                 // c2
+        mp2 + pm2,                                 // c3
+        -mp2 + pm2,                                // c4
+        ((pp - mm) * std::conj(mp - pm)).real(),   // c5
+        -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
+        ((pp + mm) * std::conj(mp + pm)).real(),   // c7
+        -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
+        ((pp + mm) * std::conj(mp - pm)).real(),   // c9
+        -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
+        ((pp - mm) * std::conj(mp + pm)).real(),   // c11
+        -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
+        -2.0 * (pp * std::conj(mm)).real(),        // c13
+        2.0 * (pp * std::conj(mm)).imag(),         // c14
+        -2.0 * (mp * std::conj(pm)).real(),        // c15
+        -2.0 * (mp * std::conj(pm)).imag()         // c16
+    };
+}
+
+// uniform 1/4 average over helicities.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
     KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
     if (!ctx.valid) { return {}; }
 
-    return averageHelicities([&](Helicity l1,
-                                 Helicity l2) -> PolarizationCoefficients {
-        const auto pp = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
-        const auto mm =
-            computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::MINUS);
-        const auto mp =
-            computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::PLUS);
-        const auto pm =
-            computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::MINUS);
+    return averageHelicities([&](Helicity l1, Helicity l2) {
+        return polCoeffsForHelicity(ctx, l1, l2);
+    });
+}
 
-        const double pp2 = std::norm(pp), mm2 = std::norm(mm);
-        const double mp2 = std::norm(mp), pm2 = std::norm(pm);
+// weighted version.
+template <typename W>
+PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th,
+                                          W &&weight) {
+    KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
+    if (!ctx.valid) { return {}; }
 
-        return {
-            pp2 + mm2,                                 // c1
-            pp2 - mm2,                                 // c2
-            mp2 + pm2,                                 // c3
-            -mp2 + pm2,                                // c4
-            ((pp - mm) * std::conj(mp - pm)).real(),   // c5
-            -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
-            ((pp + mm) * std::conj(mp + pm)).real(),   // c7
-            -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
-            ((pp + mm) * std::conj(mp - pm)).real(),   // c9
-            -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
-            ((pp - mm) * std::conj(mp + pm)).real(),   // c11
-            -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
-            -2.0 * (pp * std::conj(mm)).real(),        // c13
-            2.0 * (pp * std::conj(mm)).imag(),         // c14
-            -2.0 * (mp * std::conj(pm)).real(),        // c15
-            -2.0 * (mp * std::conj(pm)).imag()         // c16
-        };
-    });  // return averageHelicities
-}  // ends computeCoeffsOnShell
+    return weightedHelicities(
+        [&](Helicity l1, Helicity l2) {
+            return polCoeffsForHelicity(ctx, l1, l2);
+        },
+        std::forward<W>(weight));
+}
+
+// explicit instantiation for the most common case: function pointer.
+template PolarizationCoefficients
+computePolCoeffs<double (*)(Helicity, Helicity)>(double, double,
+                                                 double (*&&)(Helicity,
+                                                              Helicity));
 
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             double m2, Helicity l1, Helicity l2, Helicity s1,
