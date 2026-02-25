@@ -1,6 +1,7 @@
 #ifndef SRC_AMPLITUDE_H
 #define SRC_AMPLITUDE_H
 
+#include <array>
 #include <complex>
 #include <type_traits>
 #include "constants.h"
@@ -97,13 +98,24 @@ auto weightedHelicities(F &&func, W &&weight) {
     return total;
 }
 
+// uniform 1/4 average.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th);
 
-// Weighted version of computePolCoeffs.
-// W must be callable as double(Helicity, Helicity).
+// for weighted summation.
+// index convention: 0 = (+,+), 1 = (+,−), 2 = (−,+), 3 = (−,−).
+PolarizationCoefficients computePolCoeffsWeighted(
+    double sqrt_s_hat, double cos_th, const std::array<double, 4> &weights);
+
+// weighted version: accepts any callable W(Helicity, Helicity) --> double.
 template <typename W>
-PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th,
-                                          W &&weight);
+inline PolarizationCoefficients computePolCoeffs(double sqrt_s_hat,
+                                                 double cos_th, W &&weight) {
+    const std::array<double, 4> w = {weight(Helicity::PLUS, Helicity::PLUS),
+                                     weight(Helicity::PLUS, Helicity::MINUS),
+                                     weight(Helicity::MINUS, Helicity::PLUS),
+                                     weight(Helicity::MINUS, Helicity::MINUS)};
+    return computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
+}
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H

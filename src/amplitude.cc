@@ -1,4 +1,5 @@
 #include "amplitude.h"
+#include <array>
 #include <cmath>
 #include <complex>
 #include <utility>
@@ -62,7 +63,7 @@ Amplitude computeAmp(const KinematicContext &ctx, Helicity l1, Helicity l2,
     return {ctx.overall_fac * amp, 0.0};
 }
 
-// Per-(l1, l2) polarization coefficients — no averaging, no weighting.
+// Per-(l1, l2) polarization coefficients (no averaging, no weighting).
 PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &ctx,
                                               Helicity l1, Helicity l2) {
     const auto pp = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
@@ -104,24 +105,23 @@ PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
 }
 
 // weighted version.
-template <typename W>
-PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th,
-                                          W &&weight) {
+// index: 0 = (+,+), 1 = (+,−), 2 = (−,+), 3 = (−,−).
+PolarizationCoefficients computePolCoeffsWeighted(
+    double sqrt_s_hat, double cos_th, const std::array<double, 4> &weights) {
     KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
     if (!ctx.valid) { return {}; }
 
-    return weightedHelicities(
-        [&](Helicity l1, Helicity l2) {
-            return polCoeffsForHelicity(ctx, l1, l2);
-        },
-        std::forward<W>(weight));
-}
+    constexpr Helicity hels[4][2] = {{Helicity::PLUS, Helicity::PLUS},
+                                     {Helicity::PLUS, Helicity::MINUS},
+                                     {Helicity::MINUS, Helicity::PLUS},
+                                     {Helicity::MINUS, Helicity::MINUS}};
 
-// explicit instantiation for the most common case: function pointer.
-template PolarizationCoefficients
-computePolCoeffs<double (*)(Helicity, Helicity)>(double, double,
-                                                 double (*&&)(Helicity,
-                                                              Helicity));
+    PolarizationCoefficients total{};
+    for (int i = 0; i < 4; ++i) {
+        total += polCoeffsForHelicity(ctx, hels[i][0], hels[i][1]) * weights[i];
+    }
+    return total;
+}
 
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             double m2, Helicity l1, Helicity l2, Helicity s1,
