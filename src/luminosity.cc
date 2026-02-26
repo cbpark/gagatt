@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < NP; ++i) {
+        // z = sqrt(tau) = sqrt(s_hat / s)
         const double z = static_cast<double>(i + 1) / NP;
         const double lumi =
             gagatt::photonLuminosity(z, X, pe1, pc1, pe2, pc2, l1, l2);
