@@ -5,7 +5,9 @@ CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -march=native -I$(SRCDIR) -MMD -MP \
 	$(CXXFLAGS)
 LDFLAGS  := -lm
 
-EXENAME := gagatt_unpol gagatt_pol_perfect gagatt_pol luminosity test
+EXENAME := gagatt_unpol gagatt_pol_perfect gagatt_pol \
+	luminosity luminosity_weight \
+	test
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
 
