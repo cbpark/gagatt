@@ -42,8 +42,8 @@ SDMatrixCoefficients::SDMatrixCoefficients(
     normaliseFromPol(pol, bp, bm, cc, norm_factor);
 }
 
-SDMatrixCoefficients::SDMatrixCoefficients(
-    double sqrt_s_hat, double cos_th, const LumiWeights &w) {
+SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
+                                           const LumiWeights &w) {
     const auto pol = computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
 
     norm_factor = pol.c1 + pol.c3;
@@ -56,8 +56,8 @@ SDMatrixCoefficients::SDMatrixCoefficients(
     bm *= inv_norm;
 
     cc << (pol.c13 - pol.c15), -(pol.c14 + pol.c16), -(pol.c10 + pol.c12),
-          (pol.c14 - pol.c16),  (pol.c13 + pol.c15),   (pol.c9 + pol.c11),
-          (pol.c10 - pol.c12), -(pol.c9 - pol.c11),  -(pol.c1 - pol.c3);
+        (pol.c14 - pol.c16), (pol.c13 + pol.c15), (pol.c9 + pol.c11),
+        (pol.c10 - pol.c12), -(pol.c9 - pol.c11), -(pol.c1 - pol.c3);
     cc *= inv_norm;
 }
 
@@ -160,10 +160,11 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
 }
 
 bool isEntangledByD(const SDMatrixCoefficients &sdc) {
-    double trace_c = sdc.cc.trace();
-
+    // double trace_c = sdc.cc.trace();
+    // return std::abs(trace_c) > 1.0 + 1e-15;
+    const double delta_E = sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
     // Using a small epsilon for numerical stability.
-    return std::abs(trace_c) > 1.0 + 1e-15;
+    return delta_E < -1.0 - 1e-15;
 }
 
 double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
@@ -176,6 +177,7 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
 }
 
 double entanglementMarker(const SDMatrixCoefficients &sdc) {
-    return sdc.cc.trace() / 3.0;
+    // return sdc.cc.trace() / 3.0;
+    return sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
 }
 }  // namespace gagatt

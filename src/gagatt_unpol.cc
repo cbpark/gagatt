@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     fout << "# (1) cos(theta) (2) sqrt(s_hat) (3) rho_t2 (4) concurrence (5) "
-            "tr_c (6) bell\n";
+            "D (6) bell\n";
 
     const int N_COS = std::stoi(argv[2]);
     const int N_SQRTS = std::stoi(argv[3]);
