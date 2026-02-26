@@ -3,7 +3,6 @@
 #include <array>
 #include <cmath>
 #include <complex>
-#include <utility>
 #include "constants.h"
 #include "helicity.h"
 #include "photon.h"
@@ -20,14 +19,16 @@ struct KinematicContext {
 
     KinematicContext(double sqrt_s_hat, double ct, double m1, double m2)
         : cos_th(ct) {
-        const double threshold = m1 + m2;
-        if (sqrt_s_hat < threshold || std::abs(ct) > 1.0) {
+        // phase-space threshold
+        if (sqrt_s_hat < m1 + m2 || std::abs(ct) > 1.0) {
             valid = false;
             return;
         }
 
         const double s_hat = sqrt_s_hat * sqrt_s_hat;
         const double r = 2.0 * (m1 * m1 + m2 * m2) / s_hat;
+        // r > 1 can only happen below threshold (already guarded above for the
+        // equal-mass case).  Guard for the asymmetric case.
         if (r > 1.0) {
             valid = false;
             return;
@@ -85,24 +86,36 @@ PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
     const double pp2 = std::norm(pp), mm2 = std::norm(mm);
     const double mp2 = std::norm(mp), pm2 = std::norm(pm);
 
+    const auto pp_plus_mm = pp + mm;
+    const auto pp_minus_mm = pp - mm;
+    const auto mp_plus_pm = mp + pm;
+    const auto mp_minus_pm = mp - pm;
+
     return {
-        pp2 + mm2,                                 // c1
-        pp2 - mm2,                                 // c2
-        mp2 + pm2,                                 // c3
-        -mp2 + pm2,                                // c4
-        ((pp - mm) * std::conj(mp - pm)).real(),   // c5
-        -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
-        ((pp + mm) * std::conj(mp + pm)).real(),   // c7
-        -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
-        ((pp + mm) * std::conj(mp - pm)).real(),   // c9
-        -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
-        ((pp - mm) * std::conj(mp + pm)).real(),   // c11
-        -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
-        -2.0 * (pp * std::conj(mm)).real(),        // c13
-        2.0 * (pp * std::conj(mm)).imag(),         // c14
-        -2.0 * (mp * std::conj(pm)).real(),        // c15
-        -2.0 * (mp * std::conj(pm)).imag()         // c16
+        pp2 + mm2,                                       // c1
+        pp2 - mm2,                                       // c2
+        mp2 + pm2,                                       // c3
+        pm2 - mp2,                                       // c4  (= -mp2 + pm2)
+        (pp_minus_mm * std::conj(mp_minus_pm)).real(),   // c5
+        -(pp_minus_mm * std::conj(mp_plus_pm)).imag(),   // c6
+        (pp_plus_mm * std::conj(mp_plus_pm)).real(),     // c7
+        -(pp_plus_mm * std::conj(mp_minus_pm)).imag(),   // c8
+        (pp_plus_mm * std::conj(mp_minus_pm)).real(),    // c9
+        -(pp_plus_mm * std::conj(mp_plus_pm)).imag(),    // c10
+        (pp_minus_mm * std::conj(mp_plus_pm)).real(),    // c11
+        -(pp_minus_mm * std::conj(mp_minus_pm)).imag(),  // c12
+        -2.0 * (pp * std::conj(mm)).real(),              // c13
+        2.0 * (pp * std::conj(mm)).imag(),               // c14
+        -2.0 * (mp * std::conj(pm)).real(),              // c15
+        -2.0 * (mp * std::conj(pm)).imag()               // c16
     };
+}
+
+Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
+                            double m2, Helicity l1, Helicity l2, Helicity s1,
+                            Helicity s2) {
+    KinematicContext k(sqrt_s_hat, cos_th, m1, m2);
+    return computeAmp(k, l1, l2, s1, s2);
 }
 
 // uniform 1/4 average over helicities.
@@ -122,85 +135,33 @@ PolarizationCoefficients computePolCoeffsWeighted(
     KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
     if (!k.valid) { return {}; }
 
-    constexpr Helicity hels[4][2] = {{Helicity::PLUS, Helicity::PLUS},
-                                     {Helicity::PLUS, Helicity::MINUS},
-                                     {Helicity::MINUS, Helicity::PLUS},
-                                     {Helicity::MINUS, Helicity::MINUS}};
-
-    PolarizationCoefficients total{};
+    constexpr std::pair<Helicity, Helicity> hels[4] = {
+        {Helicity::PLUS, Helicity::PLUS},
+        {Helicity::PLUS, Helicity::MINUS},
+        {Helicity::MINUS, Helicity::PLUS},
+        {Helicity::MINUS, Helicity::MINUS},
+    };
 
 #ifdef DEBUG
     std::cout << "computePolCoeffsWeighted: weight(++, +-, -+, --) = "
               << weights[0] << ", " << weights[1] << ", " << weights[2] << ", "
               << weights[3] << '\n';
 #endif
+
+    PolarizationCoefficients total{};
     for (int i = 0; i < 4; ++i) {
-        total += polCoeffsForHelicity(k, hels[i][0], hels[i][1]) * weights[i];
+        if (weights[i] < 1e-12) { continue; }  // skip negligible weights
+        total +=
+            polCoeffsForHelicity(k, hels[i].first, hels[i].second) * weights[i];
     }
     return total;
 }
 
+// LumiWeights overload: delegates to the array overload to avoid duplication.
 PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
                                                   double cos_th,
                                                   const LumiWeights &w) {
-    KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
-    if (!k.valid) { return {}; }
-
-    // Map helicity pair --> weight
-    auto weight = [&](Helicity l1, Helicity l2) -> double {
-        if (l1 == Helicity::PLUS && l2 == Helicity::PLUS) return w.wpp;
-        if (l1 == Helicity::MINUS && l2 == Helicity::MINUS) return w.wmm;
-        if (l1 == Helicity::PLUS && l2 == Helicity::MINUS) return w.wpm;
-        return w.wmp;  // MINUS, PLUS
-    };
-
-    PolarizationCoefficients total{};
-    for (auto l1 : {Helicity::PLUS, Helicity::MINUS}) {
-        for (auto l2 : {Helicity::PLUS, Helicity::MINUS}) {
-            const double wt = weight(l1, l2);
-            if (wt < 1e-15) continue;
-
-            const auto pp =
-                computeAmp(k, l1, l2, Helicity::PLUS, Helicity::PLUS);
-            const auto mm =
-                computeAmp(k, l1, l2, Helicity::MINUS, Helicity::MINUS);
-            const auto mp =
-                computeAmp(k, l1, l2, Helicity::MINUS, Helicity::PLUS);
-            const auto pm =
-                computeAmp(k, l1, l2, Helicity::PLUS, Helicity::MINUS);
-
-            const double pp2 = std::norm(pp), mm2 = std::norm(mm);
-            const double mp2 = std::norm(mp), pm2 = std::norm(pm);
-
-            total +=
-                PolarizationCoefficients{
-                    pp2 + mm2,                                 // c1
-                    pp2 - mm2,                                 // c2
-                    mp2 + pm2,                                 // c3
-                    -mp2 + pm2,                                // c4
-                    ((pp - mm) * std::conj(mp - pm)).real(),   // c5
-                    -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
-                    ((pp + mm) * std::conj(mp + pm)).real(),   // c7
-                    -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
-                    ((pp + mm) * std::conj(mp - pm)).real(),   // c9
-                    -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
-                    ((pp - mm) * std::conj(mp + pm)).real(),   // c11
-                    -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
-                    -2.0 * (pp * std::conj(mm)).real(),        // c13
-                    2.0 * (pp * std::conj(mm)).imag(),         // c14
-                    -2.0 * (mp * std::conj(pm)).real(),        // c15
-                    -2.0 * (mp * std::conj(pm)).imag()         // c16
-                } *
-                wt;
-        }
-    }
-    return total;
-}
-
-Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
-                            double m2, Helicity l1, Helicity l2, Helicity s1,
-                            Helicity s2) {
-    KinematicContext k(sqrt_s_hat, cos_th, m1, m2);
-    return computeAmp(k, l1, l2, s1, s2);
+    return computePolCoeffsWeighted(
+        sqrt_s_hat, cos_th, std::array<double, 4>{w.wpp, w.wpm, w.wmp, w.wmm});
 }
 }  // namespace gagatt
