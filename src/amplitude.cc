@@ -1,4 +1,5 @@
 #include "amplitude.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <complex>
@@ -48,33 +49,38 @@ struct KinematicContext {
     }
 };
 
-Amplitude computeAmp(const KinematicContext &ctx, Helicity l1, Helicity l2,
+// Leading-order helicity amplitude (real at tree-level)
+Amplitude computeAmp(const KinematicContext &k, Helicity l1, Helicity l2,
                      Helicity s1, Helicity s2) {
-    if (!ctx.valid) { return {0.0, 0.0}; }
+    if (!k.valid) { return {0.0, 0.0}; }
 
     const double l1_val = toDouble(l1);
     const double s1_val = toDouble(s1);
     double amp = 0.0;
 
     if (l1 == l2) {
-        if (s1 == s2) { amp = ctx.sqrt_r * (ctx.beta * s1_val + l1_val); }
+        // identical photon helicities
+        if (s1 == s2) {  // identical top helicities
+            amp = k.sqrt_r * (k.beta * s1_val + l1_val);
+        }
     } else {
-        if (s1 == s2) {
-            amp = -ctx.beta * ctx.sqrt_r * s1_val * ctx.sin_th2;
-        } else {
-            amp = -ctx.beta * ctx.sin_th * (s1_val * l1_val + ctx.cos_th);
+        // opposite photon helicities
+        if (s1 == s2) {  // identical top helicities
+            amp = -k.beta * k.sqrt_r * s1_val * k.sin_th2;
+        } else {  // opposite top helicities
+            amp = -k.beta * k.sin_th * (s1_val * l1_val + k.cos_th);
         }
     }
-    return {ctx.overall_fac * amp, 0.0};
+    return {k.overall_fac * amp, 0.0};
 }
 
 // Per-(l1, l2) polarization coefficients (no averaging, no weighting).
-PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &ctx,
+PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
                                               Helicity l1, Helicity l2) {
-    const auto pp = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
-    const auto mm = computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::MINUS);
-    const auto mp = computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::PLUS);
-    const auto pm = computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::MINUS);
+    const auto pp = computeAmp(k, l1, l2, Helicity::PLUS, Helicity::PLUS);
+    const auto mm = computeAmp(k, l1, l2, Helicity::MINUS, Helicity::MINUS);
+    const auto mp = computeAmp(k, l1, l2, Helicity::MINUS, Helicity::PLUS);
+    const auto pm = computeAmp(k, l1, l2, Helicity::PLUS, Helicity::MINUS);
 
     const double pp2 = std::norm(pp), mm2 = std::norm(mm);
     const double mp2 = std::norm(mp), pm2 = std::norm(pm);
@@ -101,11 +107,11 @@ PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &ctx,
 
 // uniform 1/4 average over helicities.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
-    KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
-    if (!ctx.valid) { return {}; }
+    KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
+    if (!k.valid) { return {}; }
 
     return averageHelicities([&](Helicity l1, Helicity l2) {
-        return polCoeffsForHelicity(ctx, l1, l2);
+        return polCoeffsForHelicity(k, l1, l2);
     });
 }
 
@@ -113,8 +119,8 @@ PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
 // index: 0 = (+,+), 1 = (+,−), 2 = (−,+), 3 = (−,−).
 PolarizationCoefficients computePolCoeffsWeighted(
     double sqrt_s_hat, double cos_th, const std::array<double, 4> &weights) {
-    KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
-    if (!ctx.valid) { return {}; }
+    KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
+    if (!k.valid) { return {}; }
 
     constexpr Helicity hels[4][2] = {{Helicity::PLUS, Helicity::PLUS},
                                      {Helicity::PLUS, Helicity::MINUS},
@@ -129,7 +135,7 @@ PolarizationCoefficients computePolCoeffsWeighted(
               << weights[3] << '\n';
 #endif
     for (int i = 0; i < 4; ++i) {
-        total += polCoeffsForHelicity(ctx, hels[i][0], hels[i][1]) * weights[i];
+        total += polCoeffsForHelicity(k, hels[i][0], hels[i][1]) * weights[i];
     }
     return total;
 }
@@ -137,8 +143,8 @@ PolarizationCoefficients computePolCoeffsWeighted(
 PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
                                                   double cos_th,
                                                   const LumiWeights &w) {
-    KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
-    if (!ctx.valid) { return {}; }
+    KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
+    if (!k.valid) { return {}; }
 
     // Map helicity pair --> weight
     auto weight = [&](Helicity l1, Helicity l2) -> double {
@@ -155,13 +161,13 @@ PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
             if (wt < 1e-15) continue;
 
             const auto pp =
-                computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
+                computeAmp(k, l1, l2, Helicity::PLUS, Helicity::PLUS);
             const auto mm =
-                computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::MINUS);
+                computeAmp(k, l1, l2, Helicity::MINUS, Helicity::MINUS);
             const auto mp =
-                computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::PLUS);
+                computeAmp(k, l1, l2, Helicity::MINUS, Helicity::PLUS);
             const auto pm =
-                computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::MINUS);
+                computeAmp(k, l1, l2, Helicity::PLUS, Helicity::MINUS);
 
             const double pp2 = std::norm(pp), mm2 = std::norm(mm);
             const double mp2 = std::norm(mp), pm2 = std::norm(pm);
@@ -194,7 +200,7 @@ PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             double m2, Helicity l1, Helicity l2, Helicity s1,
                             Helicity s2) {
-    KinematicContext ctx(sqrt_s_hat, cos_th, m1, m2);
-    return computeAmp(ctx, l1, l2, s1, s2);
+    KinematicContext k(sqrt_s_hat, cos_th, m1, m2);
+    return computeAmp(k, l1, l2, s1, s2);
 }
 }  // namespace gagatt
