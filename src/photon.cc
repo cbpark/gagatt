@@ -178,7 +178,7 @@ LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
     const double lmp = (pc.c00 - pc.c20 + pc.c02 - pc.c22) * inv_sig;  // (-,+)
 
     const double lsum = lpp + lmm + lpm + lmp;
-    if (lsum < 1e-15) { return {}; }
+    if (lsum < 1e-12) { return {}; }
 
     return {lpp / lsum, lmm / lsum, lpm / lsum, lmp / lsum};
 }
