@@ -5,6 +5,7 @@
 #include <utility>
 #include "constants.h"
 #include "helicity.h"
+#include "photon.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -129,6 +130,63 @@ PolarizationCoefficients computePolCoeffsWeighted(
 #endif
     for (int i = 0; i < 4; ++i) {
         total += polCoeffsForHelicity(ctx, hels[i][0], hels[i][1]) * weights[i];
+    }
+    return total;
+}
+
+PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
+                                                  double cos_th,
+                                                  const LumiWeights &w) {
+    KinematicContext ctx(sqrt_s_hat, cos_th, MTOP, MTOP);
+    if (!ctx.valid) { return {}; }
+
+    // Map helicity pair --> weight
+    auto weight = [&](Helicity l1, Helicity l2) -> double {
+        if (l1 == Helicity::PLUS && l2 == Helicity::PLUS) return w.wpp;
+        if (l1 == Helicity::MINUS && l2 == Helicity::MINUS) return w.wmm;
+        if (l1 == Helicity::PLUS && l2 == Helicity::MINUS) return w.wpm;
+        return w.wmp;  // MINUS, PLUS
+    };
+
+    PolarizationCoefficients total{};
+    for (auto l1 : {Helicity::PLUS, Helicity::MINUS}) {
+        for (auto l2 : {Helicity::PLUS, Helicity::MINUS}) {
+            const double wt = weight(l1, l2);
+            if (wt < 1e-15) continue;
+
+            const auto pp =
+                computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::PLUS);
+            const auto mm =
+                computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::MINUS);
+            const auto mp =
+                computeAmp(ctx, l1, l2, Helicity::MINUS, Helicity::PLUS);
+            const auto pm =
+                computeAmp(ctx, l1, l2, Helicity::PLUS, Helicity::MINUS);
+
+            const double pp2 = std::norm(pp), mm2 = std::norm(mm);
+            const double mp2 = std::norm(mp), pm2 = std::norm(pm);
+
+            total +=
+                PolarizationCoefficients{
+                    pp2 + mm2,                                 // c1
+                    pp2 - mm2,                                 // c2
+                    mp2 + pm2,                                 // c3
+                    -mp2 + pm2,                                // c4
+                    ((pp - mm) * std::conj(mp - pm)).real(),   // c5
+                    -((pp - mm) * std::conj(mp + pm)).imag(),  // c6
+                    ((pp + mm) * std::conj(mp + pm)).real(),   // c7
+                    -((pp + mm) * std::conj(mp - pm)).imag(),  // c8
+                    ((pp + mm) * std::conj(mp - pm)).real(),   // c9
+                    -((pp + mm) * std::conj(mp + pm)).imag(),  // c10
+                    ((pp - mm) * std::conj(mp + pm)).real(),   // c11
+                    -((pp - mm) * std::conj(mp - pm)).imag(),  // c12
+                    -2.0 * (pp * std::conj(mm)).real(),        // c13
+                    2.0 * (pp * std::conj(mm)).imag(),         // c14
+                    -2.0 * (mp * std::conj(pm)).real(),        // c15
+                    -2.0 * (mp * std::conj(pm)).imag()         // c16
+                } *
+                wt;
+        }
     }
     return total;
 }

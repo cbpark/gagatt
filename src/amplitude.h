@@ -6,6 +6,7 @@
 #include <type_traits>
 #include "constants.h"
 #include "helicity.h"
+#include "photon.h"  // for LumiWeights
 
 namespace gagatt {
 using Amplitude = std::complex<double>;
@@ -116,6 +117,10 @@ inline PolarizationCoefficients computePolCoeffs(double sqrt_s_hat,
                                      weight(Helicity::MINUS, Helicity::MINUS)};
     return computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
 }
+
+PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
+                                                  double cos_th,
+                                                  const LumiWeights &w);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H

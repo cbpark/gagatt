@@ -18,6 +18,16 @@ double photonLuminosity(double z, double x, double pe1, double pc1, double pe2,
 inline double photonLuminosityUnpol(double z, double x) {
     return photonLuminosity(z, x, 0.0, 0.0, 0.0, 0.0, {}, {});
 }
+
+struct LumiWeights {
+    double wpp, wmm, wpm, wmp;
+};
+
+// Compute the four luminosity weights w_{l1l2} = L_{l1l2} / sum L
+// at a given z = sqrt(tau).
+// Returns {0,0,0,0} if sum vanishes.
+LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
+                        double pc2);
 }  // namespace gagatt
 
 #endif  // SRC_PHOTON_H

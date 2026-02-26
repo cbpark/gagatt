@@ -15,6 +15,7 @@
 #endif
 
 #include "amplitude.h"  // for the weighted template
+#include "photon.h"
 
 namespace gagatt {
 using Matrix2cd = Eigen::Matrix2cd;
@@ -67,9 +68,11 @@ struct SDMatrixCoefficients {
     template <typename W>
     SDMatrixCoefficients(double sqrt_s_hat, double cos_th, W &&weight);
 
-    double c_hat_nn() const { return cc(0, 0) * norm_factor; }
-    double c_hat_rr() const { return cc(1, 1) * norm_factor; }
-    double c_hat_kk() const { return cc(2, 2) * norm_factor; }
+    SDMatrixCoefficients(double sqrt_s_hat, double cos_th, const LumiWeights &w);
+
+    double c_nn() const { return cc(0, 0); }
+    double c_rr() const { return cc(1, 1); }
+    double c_kk() const { return cc(2, 2); }
 };
 
 Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc);

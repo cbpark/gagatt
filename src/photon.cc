@@ -160,4 +160,26 @@ double photonLuminosity(double z, double x, double pe1, double pc1, double pe2,
             l1_val * l2_val * pol_corr.c22) /
            (sigma_c1 * sigma_c2);
 }
+
+LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
+                        double pc2) {
+    const double sigma_c1 = sigmaC(x, pe1, pc1);
+    const double sigma_c2 = sigmaC(x, pe2, pc2);
+    if (sigma_c1 <= 0.0 || sigma_c2 <= 0.0) { return {}; }
+
+    // One GSL integration (4 integrals), shared by all helicity combinations
+    const auto pc = computePolCor(z, x, pe1, pc1, pe2, pc2);
+    const double inv_sig = 1.0 / (sigma_c1 * sigma_c2);
+
+    // L_{l1,l2} = (c00 + l1*c20 + l2*c02 + l1*l2*c22) / (s1 s2)
+    const double lpp = (pc.c00 + pc.c20 + pc.c02 + pc.c22) * inv_sig;  // (+,+)
+    const double lmm = (pc.c00 - pc.c20 - pc.c02 + pc.c22) * inv_sig;  // (-,-)
+    const double lpm = (pc.c00 + pc.c20 - pc.c02 - pc.c22) * inv_sig;  // (+,-)
+    const double lmp = (pc.c00 - pc.c20 + pc.c02 - pc.c22) * inv_sig;  // (-,+)
+
+    const double lsum = lpp + lmm + lpm + lmp;
+    if (lsum < 1e-15) { return {}; }
+
+    return {lpp / lsum, lmm / lsum, lpm / lsum, lmp / lsum};
+}
 }  // namespace gagatt
