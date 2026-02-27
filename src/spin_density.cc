@@ -175,6 +175,8 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
 
 double entanglementMarker(const SDMatrixCoefficients &sdc) {
     // return sdc.cc.trace() / 3.0;
-    return sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
+    // return sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
+    const double delta_e = sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
+    return -delta_e / 3.0;
 }
 }  // namespace gagatt
