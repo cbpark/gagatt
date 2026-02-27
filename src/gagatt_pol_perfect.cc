@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "photon.h"
 #include "spin_density.h"
 
 constexpr double COS_TH_MIN = -1.0;
@@ -22,24 +23,19 @@ constexpr HelicityMode MODES[] = {{"pp", Helicity::PLUS, Helicity::PLUS},
                                   {"mp", Helicity::MINUS, Helicity::PLUS},
                                   {"mm", Helicity::MINUS, Helicity::MINUS}};
 
-using WeightFn = double (*)(Helicity, Helicity);
-
-template <Helicity H1, Helicity H2>
-double fixedWeight(Helicity l1, Helicity l2) {
-    return (l1 == H1 && l2 == H2) ? 1.0 : 0.0;
-}
-
-WeightFn weightFor(Helicity h1, Helicity h2) {
-    if (h1 == Helicity::PLUS && h2 == Helicity::PLUS) {
-        return &fixedWeight<Helicity::PLUS, Helicity::PLUS>;
+LumiWeights weightFor(Helicity h1, Helicity h2) {
+    using H = Helicity;
+    if (h1 == H::PLUS && h2 == H::PLUS) {
+        return {1.0, 0.0, 0.0, 0.0};
+    } else if (h1 == H::PLUS && h2 == H::MINUS) {
+        return {0.0, 1.0, 0.0, 0.0};
+    } else if (h1 == H::MINUS && h2 == H::PLUS) {
+        return {0.0, 0.0, 1.0, 0.0};
+    } else if (h1 == H::MINUS && h2 == H::MINUS) {
+        return {0.0, 0.0, 0.0, 1.0};
+    } else {
+        return {0.0, 0.0, 0.0, 0.0};
     }
-    if (h1 == Helicity::MINUS && h2 == Helicity::MINUS) {
-        return &fixedWeight<Helicity::MINUS, Helicity::MINUS>;
-    }
-    if (h1 == Helicity::PLUS && h2 == Helicity::MINUS) {
-        return &fixedWeight<Helicity::PLUS, Helicity::MINUS>;
-    }
-    return &fixedWeight<Helicity::MINUS, Helicity::PLUS>;
 }
 
 void run(const HelicityMode &mode, const std::string &fname, int N_COS,
@@ -61,15 +57,14 @@ void run(const HelicityMode &mode, const std::string &fname, int N_COS,
     const double d_cos = (COS_TH_MAX - COS_TH_MIN) / N_COS;
     const double d_sqrts = (SQRTS_MAX - SQRTS_MIN) / N_SQRTS;
 
-    WeightFn wfn = weightFor(mode.h1, mode.h2);
+    auto lw = weightFor(mode.h1, mode.h2);
 
     for (int i = 0; i < N_COS; ++i) {
         const double cos_th = COS_TH_MIN + (i + 0.5) * d_cos;
 
         for (int j = 0; j < N_SQRTS; ++j) {
             const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
-
-            SDMatrixCoefficients sdc(sqrt_s_hat, cos_th, wfn);
+            SDMatrixCoefficients sdc(sqrt_s_hat, cos_th, lw);
             auto rho = spinDensityMatrix(sdc);
 
             fout << std::format(
