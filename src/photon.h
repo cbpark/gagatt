@@ -1,6 +1,7 @@
 #ifndef SRC_PHOTON_H
 #define SRC_PHOTON_H
 
+#include <array>
 #include <optional>
 #include "helicity.h"
 
@@ -19,13 +20,15 @@ inline double photonLuminosityUnpol(double z, double x) {
     return photonLuminosity(z, x, 0.0, 0.0, 0.0, 0.0, {}, {});
 }
 
+// Normalised luminosity weights for the four photon helicity combinations.
+// Order: {++, +-, -+, --}.
 struct LumiWeights {
-    double wpp, wmm, wpm, wmp;
+    std::array<double, 4> w;  // democratic default
 };
 
-// Compute the four luminosity weights w_{l1l2} = L_{l1l2} / sum L
-// at a given z = sqrt(tau).
-// Returns {0,0,0,0} if sum vanishes.
+// Compute luminosity weights from polarization correlation integrals.
+// Performs 4 GSL integrations (c00, c20, c02, c22) and returns the
+// normalised weights for (++, +-, -+, --).
 LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
                         double pc2);
 }  // namespace gagatt

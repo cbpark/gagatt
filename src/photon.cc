@@ -167,19 +167,27 @@ LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
     const double sigma_c2 = sigmaC(x, pe2, pc2);
     if (sigma_c1 <= 0.0 || sigma_c2 <= 0.0) { return {}; }
 
-    // One GSL integration (4 integrals), shared by all helicity combinations
     const auto pc = computePolCor(z, x, pe1, pc1, pe2, pc2);
-    const double inv_sig = 1.0 / (sigma_c1 * sigma_c2);
+    const double inv_sigma = 1.0 / (sigma_c1 * sigma_c2);
 
-    // L_{l1,l2} = (c00 + l1*c20 + l2*c02 + l1*l2*c22) / (s1 s2)
-    const double lpp = (pc.c00 + pc.c20 + pc.c02 + pc.c22) * inv_sig;  // (+,+)
-    const double lmm = (pc.c00 - pc.c20 - pc.c02 + pc.c22) * inv_sig;  // (-,-)
-    const double lpm = (pc.c00 + pc.c20 - pc.c02 - pc.c22) * inv_sig;  // (+,-)
-    const double lmp = (pc.c00 - pc.c20 + pc.c02 - pc.c22) * inv_sig;  // (-,+)
+    // L_{l1,l2} = (c00 + l1*c20 + l2*c02 + l1*l2*c22) / (sigma1*sigma2)
+    // Order: ++, +-, -+, --
+    std::array<double, 4> lumi{};
+    int idx = 0;
+    for (double l1 : {+1.0, -1.0}) {
+        for (double l2 : {+1.0, -1.0}) {
+            lumi[idx++] =
+                (pc.c00 + l1 * pc.c20 + l2 * pc.c02 + l1 * l2 * pc.c22) *
+                inv_sigma;
+        }
+    }
 
-    const double lsum = lpp + lmm + lpm + lmp;
-    if (lsum < 1e-12) { return {}; }
+    // Normalise: w_i = L_i / sum(L)
+    const double sum = lumi[0] + lumi[1] + lumi[2] + lumi[3];
+    if (sum < 1e-15) { return {}; }
 
-    return {lpp / lsum, lmm / lsum, lpm / lsum, lmp / lsum};
+    const double inv_sum = 1.0 / sum;
+    return LumiWeights{{lumi[0] * inv_sum, lumi[1] * inv_sum, lumi[2] * inv_sum,
+                        lumi[3] * inv_sum}};
 }
 }  // namespace gagatt
