@@ -102,6 +102,9 @@ auto weightedHelicities(F &&func, W &&weight) {
 // uniform 1/4 average.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th);
 
+PolarizationCoefficients polCoeffsForHelicity(double sqrt_s_hat, double cos_th,
+                                              Helicity l1, Helicity l2);
+
 // for weighted summation.
 // index convention: 0 = (+,+), 1 = (+,−), 2 = (−,+), 3 = (−,−).
 PolarizationCoefficients computePolCoeffsWeighted(
@@ -117,10 +120,6 @@ inline PolarizationCoefficients computePolCoeffs(double sqrt_s_hat,
                                      weight(Helicity::MINUS, Helicity::MINUS)};
     return computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
 }
-
-PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
-                                                  double cos_th,
-                                                  const LumiWeights &w);
 }  // namespace gagatt
 
 #endif  // SRC_AMPLITUDE_H

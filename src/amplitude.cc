@@ -78,6 +78,8 @@ Amplitude computeAmp(const KinematicContext &k, Helicity l1, Helicity l2,
 // Per-(l1, l2) polarization coefficients (no averaging, no weighting).
 PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
                                               Helicity l1, Helicity l2) {
+    if (!k.valid) { return {}; }
+
     const auto pp = computeAmp(k, l1, l2, Helicity::PLUS, Helicity::PLUS);
     const auto mm = computeAmp(k, l1, l2, Helicity::MINUS, Helicity::MINUS);
     const auto mp = computeAmp(k, l1, l2, Helicity::MINUS, Helicity::PLUS);
@@ -111,6 +113,12 @@ PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
     };
 }
 
+PolarizationCoefficients polCoeffsForHelicity(double sqrt_s_hat, double cos_th,
+                                              Helicity l1, Helicity l2) {
+    KinematicContext k{sqrt_s_hat, cos_th, MTOP, MTOP};
+    return polCoeffsForHelicity(k, l1, l2);
+}
+
 Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
                             double m2, Helicity l1, Helicity l2, Helicity s1,
                             Helicity s2) {
@@ -121,10 +129,8 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 // uniform 1/4 average over helicities.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
     KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
-    if (!k.valid) { return {}; }
-
     return averageHelicities([&](Helicity l1, Helicity l2) {
-        return polCoeffsForHelicity(k, l1, l2);
+        return polCoeffsForHelicity(sqrt_s_hat, cos_th, l1, l2);
     });
 }
 
@@ -155,13 +161,5 @@ PolarizationCoefficients computePolCoeffsWeighted(
             polCoeffsForHelicity(k, hels[i].first, hels[i].second) * weights[i];
     }
     return total;
-}
-
-// LumiWeights overload: delegates to the array overload to avoid duplication.
-PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
-                                                  double cos_th,
-                                                  const LumiWeights &w) {
-    const std::array<double, 4> weights = {w.wpp, w.wpm, w.wmp, w.wmm};
-    return computePolCoeffsWeighted(sqrt_s_hat, cos_th, weights);
 }
 }  // namespace gagatt

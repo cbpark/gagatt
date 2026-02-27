@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "photon.h"
 #include "spin_density.h"
 
@@ -49,19 +50,27 @@ int main(int argc, char *argv[]) {
     }
 
     fout << "# cos_th  sqrt_s_hat  negativity  concurrence"
-            "  bell  tr_c_3\n";
+            "  bell  delta_3\n";
+
+    std::vector<LumiWeights> lumi_cache(N_SQRTS);
+    for (int j = 0; j < N_SQRTS; ++j) {
+        const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
+        const double sqrt_tau = sqrt_s_hat / sqrt_s_ee;
+        lumi_cache[j] = lumiWeights(sqrt_tau, X, pe1, pc1, pe2, pc2);
+
+        if ((j + 1) % 500 == 0) {
+            std::cout << std::format("-- lumi cache: {} / {}\n", j + 1,
+                                     N_SQRTS);
+        }
+    }
 
     for (int i = 0; i < N_COS; ++i) {
         const double cos_th = COS_TH_MIN + (i + 0.5) * d_cos;
 
         for (int j = 0; j < N_SQRTS; ++j) {
             const double sqrt_s_hat = SQRTS_MIN + (j + 0.5) * d_sqrts;
-            const double z = sqrt_s_hat / sqrt_s_ee;
-
-            // 4 GSL integrations — shared across all helicities
-            const auto w = lumiWeights(z, X, pe1, pc1, pe2, pc2);
-
-            const auto sdc = SDMatrixCoefficients(sqrt_s_hat, cos_th, w);
+            const auto sdc =
+                SDMatrixCoefficients(sqrt_s_hat, cos_th, lumi_cache[j]);
             const auto rho = spinDensityMatrix(sdc);
 
             fout << std::format(
