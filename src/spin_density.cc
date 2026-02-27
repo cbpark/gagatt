@@ -45,20 +45,7 @@ SDMatrixCoefficients::SDMatrixCoefficients(
 SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
                                            const LumiWeights &w) {
     const auto pol = computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
-
-    norm_factor = pol.c1 + pol.c3;
-    const double inv_norm =
-        (std::abs(norm_factor) > 1e-15) ? 1.0 / norm_factor : 0.0;
-
-    bp << (pol.c6 + pol.c8), -(pol.c5 + pol.c7), (pol.c2 + pol.c4);
-    bm << (pol.c6 - pol.c8), -(pol.c5 - pol.c7), -(pol.c2 - pol.c4);
-    bp *= inv_norm;
-    bm *= inv_norm;
-
-    cc << (pol.c13 - pol.c15), -(pol.c14 + pol.c16), -(pol.c10 + pol.c12),
-        (pol.c14 - pol.c16), (pol.c13 + pol.c15), (pol.c9 + pol.c11),
-        (pol.c10 - pol.c12), -(pol.c9 - pol.c11), -(pol.c1 - pol.c3);
-    cc *= inv_norm;
+    normaliseFromPol(pol, bp, bm, cc, norm_factor);
 }
 
 Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc) {
