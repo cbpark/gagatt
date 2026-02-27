@@ -64,11 +64,8 @@ struct SDMatrixCoefficients {
     // construct from pre-computed PolarizationCoefficients
     explicit SDMatrixCoefficients(const PolarizationCoefficients &pol);
 
-    // weighted constructor
-    template <typename W>
-    SDMatrixCoefficients(double sqrt_s_hat, double cos_th, W &&weight);
-
-    SDMatrixCoefficients(double sqrt_s_hat, double cos_th, const LumiWeights &w);
+    SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
+                         const LumiWeights &w);
 
     double c_nn() const { return cc(0, 0); }
     double c_rr() const { return cc(1, 1); }
@@ -110,13 +107,6 @@ bool isEntangledByD(const SDMatrixCoefficients &sdc);
 double horodeckiMeasure(const SDMatrixCoefficients &sdc);
 
 double entanglementMarker(const SDMatrixCoefficients &sdc);
-
-// weighted SDMatrixCoefficients constructor
-template <typename W>
-SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
-                                           W &&weight)
-    : SDMatrixCoefficients(
-          computePolCoeffs(sqrt_s_hat, cos_th, std::forward<W>(weight))) {}
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H

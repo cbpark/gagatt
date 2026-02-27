@@ -43,9 +43,19 @@ SDMatrixCoefficients::SDMatrixCoefficients(
 }
 
 SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
-                                           const LumiWeights &w) {
-    const auto pol = computePolCoeffsWeighted(sqrt_s_hat, cos_th, w);
-    normaliseFromPol(pol, bp, bm, cc, norm_factor);
+                                           const LumiWeights &lw) {
+    constexpr Helicity P = Helicity::PLUS;
+    constexpr Helicity M = Helicity::MINUS;
+    constexpr std::array<std::pair<Helicity, Helicity>, 4> hels = {
+        {{P, P}, {P, M}, {M, P}, {M, M}}};
+
+    PolarizationCoefficients weighted{};
+    for (int k = 0; k < 4; ++k) {
+        weighted += polCoeffsForHelicity(sqrt_s_hat, cos_th, hels[k].first,
+                                         hels[k].second) *
+                    lw.w[k];
+    }
+    normaliseFromPol(weighted, bp, bm, cc, norm_factor);
 }
 
 Matrix4cd spinDensityMatrix(const SDMatrixCoefficients &sdc) {
