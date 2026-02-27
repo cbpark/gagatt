@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
         const double z = static_cast<double>(i + 1) / NP;
         const auto weights = lumiWeights(z, X, pe1, pc1, pe2, pc2);
 
-        fout << z << "  " << weights.wpp << "  " << weights.wpm << "  "
-             << weights.wmp << "  " << weights.wmm << '\n';
+        fout << z << "  " << weights.w[0] << "  " << weights.w[1] << "  "
+             << weights.w[2] << "  " << weights.w[3] << '\n';
     }
 
     std::cout << "luminosity_weight: output in " << argv[1] << '\n';
