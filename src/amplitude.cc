@@ -161,7 +161,7 @@ PolarizationCoefficients computePolCoeffsWeighted(
 PolarizationCoefficients computePolCoeffsWeighted(double sqrt_s_hat,
                                                   double cos_th,
                                                   const LumiWeights &w) {
-    return computePolCoeffsWeighted(
-        sqrt_s_hat, cos_th, std::array<double, 4>{w.wpp, w.wpm, w.wmp, w.wmm});
+    const std::array<double, 4> weights = {w.wpp, w.wpm, w.wmp, w.wmm};
+    return computePolCoeffsWeighted(sqrt_s_hat, cos_th, weights);
 }
 }  // namespace gagatt
