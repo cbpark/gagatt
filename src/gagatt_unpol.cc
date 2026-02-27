@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
             const auto rho = spinDensityMatrix(sdc);
 
             fout << std::format(
-                "{:.2f}{:>12.4f}\t{:d}\t{:d}\t{:d}\t{:d}\n", cos_th, sqrt_s_hat,
+                "{:.2f}\t{:>10.4f}\t{:d}\t{:d}\t{:d}\t{:d}\n", cos_th, sqrt_s_hat,
                 isEntangledByPH(rho), isEntangledByConcurrence(rho),
                 isEntangledByD(sdc), violatesBellInequality(sdc));
 
