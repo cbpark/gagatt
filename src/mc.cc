@@ -3,6 +3,7 @@
 #include <format>
 #include <iostream>
 #include <numbers>
+#include <random>
 #include <vector>
 #include "constants.h"
 #include "photon.h"
@@ -68,6 +69,53 @@ static double eventRate(double sqrt_s_hat, double cos_th,
     //                    * GEV2_TO_FB [fb/GeV^{-2}]
     // dN / d(sqrt_s_hat) d cos_th = (dN/dz d cos_th) / sqrt_s
     return xsec * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
+}
+
+// ----------------------------------------------------------------------
+// sampleDecayAngles:
+//   Sample (n_+, n_-) -- unit vectors for the two decay leptons in
+//   their respective top / anti-top helicity frames -- from the joint
+//   angular distribution:
+//
+//     P(n+, n-) = (1/4pi)^2 * [1 + B+.n+ + B-.n- + C_ij n+^i n-^j]
+//
+//   using accept/reject with envelope w_max.
+//   Returns cos(phi) = n+ . n-.
+// ----------------------------------------------------------------------
+double sampleDecayAngles(const SDMatrixCoefficients &sdc,
+                         std::mt19937_64 &rng) {
+    std::uniform_real_distribution<double> uni(-1.0, 1.0);
+    std::uniform_real_distribution<double> phi_dist(0.0,
+                                                    2.0 * std::numbers::pi);
+    std::uniform_real_distribution<double> uni01(0.0, 1.0);
+
+    // Conservative envelope: w_max = 1 + |B+| + |B-| + ||C||_F
+    const double w_max = 1.0 + sdc.bp.norm() + sdc.bm.norm() + sdc.cc.norm();
+
+    for (;;) {
+        // Sample n+ uniformly on S^2
+        const double cos_th_p = uni(rng);
+        const double sin_th_p = std::sqrt(1.0 - cos_th_p * cos_th_p);
+        const double phi_p = phi_dist(rng);
+        const Eigen::Vector3d np(sin_th_p * std::cos(phi_p),
+                                 sin_th_p * std::sin(phi_p), cos_th_p);
+
+        // Sample n- uniformly on S^2
+        const double cos_th_m = uni(rng);
+        const double sin_th_m = std::sqrt(1.0 - cos_th_m * cos_th_m);
+        const double phi_m = phi_dist(rng);
+        const Eigen::Vector3d nm(sin_th_m * std::cos(phi_m),
+                                 sin_th_m * std::sin(phi_m), cos_th_m);
+
+        // Joint weight (always >= 0 when w_max is correct)
+        const double w =
+            1.0 + sdc.bp.dot(np) + sdc.bm.dot(nm) + np.dot(sdc.cc * nm);
+
+        // Accept/reject
+        if (uni01(rng) * w_max <= w) {
+            return np.dot(nm);  // cos(phi)
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -182,9 +230,88 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << std::format("-- total expected events: {:.3e}\n",
                              total_weight);
     std::cout << std::format("-- theory <cos phi>: {:.6f}\n", theory_cos_phi);
+    std::cout << std::format("-- theory <negativity>:   {:.6f}\n",
+                             tw_neg / total_weight);
+    std::cout << std::format("-- theory <concurrence>:  {:.6f}\n",
+                             tw_con / total_weight);
 
-    // Phase 5: compute results
+    // ------------------------------------------------------------------
+    // Phase 3: set up discrete distribution for bin sampling (CDF)
+    // ------------------------------------------------------------------
+    // std::discrete_distribution samples index k with probability
+    // proportional to weights[k].
+    std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
+                                      : static_cast<uint64_t>(cfg.seed));
+
+    std::discrete_distribution<int> bin_dist(weights.begin(), weights.end());
+
+    // ------------------------------------------------------------------
+    // Phase 4: event loop — sample bin, then sample decay angles
+    // ------------------------------------------------------------------
+    std::cout << std::format("-- running {} MC events ...\n", cfg.n_events);
+
+    double sum_cos_phi = 0.0;
+    // double sum_cos_phi2 = 0.0;
+    long long n_accepted = 0;
+
+    const long long print_every = std::max(1LL, cfg.n_events / 10);
+
+    while (n_accepted < cfg.n_events) {
+        // Draw a bin index proportional to its expected event count
+        const int k = bin_dist(rng);
+
+        // sdc for this bin: already computed in Phase 2
+        const SDMatrixCoefficients &sdc = sdc_cache[k];
+
+        // Sample decay angles from the joint distribution and get cos(phi)
+        const double cos_phi = sampleDecayAngles(sdc, rng);
+
+        sum_cos_phi += cos_phi;
+        // sum_cos_phi2 += cos_phi * cos_phi;
+        ++n_accepted;
+
+        if (n_accepted % print_every == 0) {
+            std::cout << std::format("  events: {}/{}\n", n_accepted,
+                                     cfg.n_events);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Phase 5: aggregate statistics -> MCResult
+    // ------------------------------------------------------------------
+    const double n = static_cast<double>(n_accepted);
+    const double mean = sum_cos_phi / n;
+    // // Variance of the mean: Var(<cos phi>) = (E[x^2] - E[x]^2) / n
+    // const double var_x = sum_cos_phi2 / n - mean * mean;
+    // const double sigma = (n > 1.0) ? std::sqrt(std::max(0.0, var_x) / n) : 0.0;
+    // // Significance: |<cos phi>| / sigma  (null: <cos phi> = 0)
+    // const double signif = (sigma > 0.0) ? std::abs(mean) / sigma : 0.0;
+
     MCResult res;
+    res.n_events_generated = n_accepted;
+    res.mean_cos_phi = mean;
+    // res.sigma_cos_phi = sigma;
+    // res.significance = signif;
+    res.theory_cos_phi = theory_cos_phi;
+    res.theory_negativity = tw_neg / total_weight;
+    res.theory_concurrence = tw_con / total_weight;
+    res.total_xsec_fb = total_weight / cfg.L_ee_fb;
+
+    std::cout << "\n-- MC results --\n";
+    std::cout << std::format("   N events generated  : {}\n",
+                             res.n_events_generated);
+    std::cout << std::format("   <cos phi>  (MC)     : {:.6f} +/- {:.6f}\n",
+                             res.mean_cos_phi, res.sigma_cos_phi);
+    std::cout << std::format("   <cos phi>  (theory) : {:.6f}\n",
+                             res.theory_cos_phi);
+    std::cout << std::format("   significance        : {:.2f} sigma\n",
+                             res.significance);
+    std::cout << std::format("   negativity          : {:.6f}\n",
+                             res.theory_negativity);
+    std::cout << std::format("   concurrence         : {:.6f}\n",
+                             res.theory_concurrence);
+    std::cout << std::format("   total xsec          : {:.4f} fb\n",
+                             res.total_xsec_fb);
 
     return res;
 }
