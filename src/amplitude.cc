@@ -72,6 +72,7 @@ Amplitude computeAmp(const KinematicContext &k, Helicity l1, Helicity l2,
             amp = -k.beta * k.sin_th * (s1_val * l1_val + k.cos_th);
         }
     }
+    // note: overall_fac (== A_C) is already multiplied
     return {k.overall_fac * amp, 0.0};
 }
 
