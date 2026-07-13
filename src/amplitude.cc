@@ -126,10 +126,9 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
     return computeAmp(k, l1, l2, s1, s2);
 }
 
-// uniform 1/4 average over helicities.
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
     KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
-    return averageHelicities([&](Helicity l1, Helicity l2) {
+    return summedHelicities([&](Helicity l1, Helicity l2) {
         return polCoeffsForHelicity(sqrt_s_hat, cos_th, l1, l2);
     });
 }
@@ -157,8 +156,8 @@ PolarizationCoefficients computePolCoeffsWeighted(
     PolarizationCoefficients total{};
     for (int i = 0; i < 4; ++i) {
         if (weights[i] < 1e-12) { continue; }  // skip negligible weights
-        total +=
-            polCoeffsForHelicity(k, hels[i].first, hels[i].second) * weights[i];
+        total += polCoeffsForHelicity(k, hels[i].first, hels[i].second) *
+                 (4.0 * weights[i]);
     }
     return total;
 }

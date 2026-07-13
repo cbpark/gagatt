@@ -53,7 +53,7 @@ SDMatrixCoefficients::SDMatrixCoefficients(double sqrt_s_hat, double cos_th,
     for (int k = 0; k < 4; ++k) {
         weighted += polCoeffsForHelicity(sqrt_s_hat, cos_th, hels[k].first,
                                          hels[k].second) *
-                    lw.w[k];
+                    (4.0 * lw.w[k]);
     }
     normaliseFromPol(weighted, bp, bm, cc, norm_factor);
 }
