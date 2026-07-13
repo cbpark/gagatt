@@ -42,17 +42,32 @@ double partialXsec(double sqrt_s_hat, double cos_th,
     return prefac * sdc.norm_factor;
 }
 
-double lumiTotal(double z, double x, double pe1, double pc1, double pe2,
-                 double pc2) {
-    const double sc1 = sigmaC(x, pe1, pc1);
-    const double sc2 = sigmaC(x, pe2, pc2);
-    if (sc1 <= 0.0 || sc2 <= 0.0) { return 0.0; }
+// -----------------------------------------------------------------------
+// eventRate: d^2 N / (d sqrt_s_hat  d cos_th)
+//
+//   = (d sigma_hat / d cos_th) [GeV^{-2}]
+//   * L_tot(z) [GeV^{-2}]        (photon-photon luminosity, per unit z)
+//   * L_ee [fb^{-1}]
+//   * GEV2_TO_FB [fb / GeV^{-2}]
+//
+// The factor L_tot already carries the 1/sqrt_s = 1/(sqrt_s * z) Jacobian
+// from d tau --> d sqrt_tau = d z, applied inside computePolCor (* 2z).
+// An additional 1/sqrt_s factor converts dL/dz (per unit z=sqrt_tau) to
+// dL/d(sqrt_s_hat): since z = sqrt_s_hat / sqrt_s, dz = d(sqrt_s_hat)/sqrt_s,
+// so dN/d(sqrt_s_hat) = dN/dz * (1/sqrt_s).
+// -----------------------------------------------------------------------
+static double eventRate(double sqrt_s_hat, double cos_th,
+                        const SDMatrixCoefficients &sdc,
+                        double L_tot,      // [GeV^{-2}], per unit z
+                        double sqrt_s,     // [GeV]
+                        double L_ee_fb) {  // [fb^{-1}]
+    const double xsec = partialXsec(sqrt_s_hat, cos_th, sdc);  // [GeV^{-2}]
+    if (xsec <= 0.0 || L_tot <= 0.0) { return 0.0; }
 
-    // Re-use photonLuminosity with nullopt helicities --> returns L^unp
-    // which = <00>_tau / (sigma_c1 sigma_c2).
-    // L^tot = 4 L^avg = 4 L^unp
-    const double L_unp = photonLuminosity(z, x, pe1, pc1, pe2, pc2, {}, {});
-    return 4.0 * L_unp;
+    // dN / dz d cos_th = xsec [GeV^{-2}] * L_tot [GeV^{-2}] * L_ee [fb^{-1}]
+    //                    * GEV2_TO_FB [fb/GeV^{-2}]
+    // dN / d(sqrt_s_hat) d cos_th = (dN/dz d cos_th) / sqrt_s
+    return xsec * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
 }
 
 // ----------------------------------------------------------------------
@@ -74,7 +89,9 @@ MCResult runMC(const MCConfig &cfg) {
         "cos_th in [{:.2f}, {:.2f}]\n",
         sqrts_min, sqrts_max, cfg.cos_th_min, cfg.cos_th_max);
 
+    // ------------------------------------------------------------------
     // Phase 1: precompute luminosity-weight cache
+    // ------------------------------------------------------------------
     const double d_sqrts =
         (sqrts_max - sqrts_min) / static_cast<double>(cfg.n_sqrts);
     const double d_cos =
@@ -90,23 +107,33 @@ MCResult runMC(const MCConfig &cfg) {
     for (int j = 0; j < cfg.n_sqrts; ++j) {
         const double ssh = sqrts_min + (j + 0.5) * d_sqrts;
         const double z = ssh / cfg.sqrt_s;
-        cache[j].lw = lumiWeights(z, cfg.x, cfg.pe1, pc1, cfg.pe2, pc2);
-        cache[j].L_tot = lumiTotal(z, cfg.x, cfg.pe1, pc1, cfg.pe2, pc2);
+        const auto [lw, L_tot] =
+            lumiWeightsAndTotal(z, cfg.x, cfg.pe1, pc1, cfg.pe2, pc2);
+        cache[j].lw = lw;
+        cache[j].L_tot = L_tot;
 
         if ((j + 1) % 500 == 0) {
-            std::cout << std::format("   lumi cache: {}/{}\n", j + 1,
+            std::cout << std::format("  lumi cache: {}/{}\n", j + 1,
                                      cfg.n_sqrts);
         }
     }
 
-    // Phase 2: build 2D weight table for importance sampling
-    // w[i][j] = event rate at (cos_th_i, sqrt_s_hat_j)
-    // We flatten to 1-D for CDF sampling.
+    // ------------------------------------------------------------------
+    // Phase 2: build 2-D weight table (used for CDF importance sampling)
+    //   weight[i*n_sqrts+j] = dN / (d sqrt_s_hat d cos_th) * d_sqrts * d_cos
+    //                       = number of expected events in bin (i,j)
+    // ------------------------------------------------------------------
     const int N = cfg.n_cos * cfg.n_sqrts;
-    std::vector<double> weights(N);
+    std::vector<double> weights(N, 0.0);
+
+    // Per-bin theory quantities (for weighted averages)
     std::vector<double> theory_neg(N, 0.0);
     std::vector<double> theory_con(N, 0.0);
     std::vector<double> theory_trc(N, 0.0);  // Tr[C] for <cos phi>
+
+    // Store sdc per bin for decay sampling (reused in Phase 4)
+    std::vector<SDMatrixCoefficients> sdc_cache;
+    sdc_cache.reserve(N);
 
     std::cout << "-- building weight table ...\n";
     double total_weight = 0.0;
@@ -119,18 +146,20 @@ MCResult runMC(const MCConfig &cfg) {
             const auto rho = spinDensityMatrix(sdc);
 
             const double rate =
-                eventRate(ssh, cos_th, sdc, ce.L_tot, cfg.L_ee_fb) * d_sqrts *
-                d_cos;  // bin weight
+                eventRate(ssh, cos_th, sdc, ce.L_tot, cfg.sqrt_s, cfg.L_ee_fb) *
+                d_sqrts * d_cos;
 
             const int idx = i * cfg.n_sqrts + j;
             weights[idx] = std::max(0.0, rate);
             theory_neg[idx] = negativity(rho);
             theory_con[idx] = getConcurrence(rho);
             theory_trc[idx] = sdc.cc.trace();  // Tr[C]
+            sdc_cache.push_back(sdc);
+
             total_weight += weights[idx];
         }
         if ((i + 1) % 20 == 0) {
-            std::cout << std::format("   weight table: {}/{}\n", i + 1,
+            std::cout << std::format("  weight table: {}/{}\n", i + 1,
                                      cfg.n_cos);
         }
     }
@@ -148,7 +177,11 @@ MCResult runMC(const MCConfig &cfg) {
         tw_con += weights[k] * theory_con[k];
         tw_trc += weights[k] * theory_trc[k];
     }
-    const double theory_cos_phi = -(tw_trc / total_weight) / 9.0;  // Eq. (5.35)
+    const double theory_cos_phi = -(tw_trc / total_weight) / 9.0;
+
+    std::cout << std::format("-- total expected events: {:.3e}\n",
+                             total_weight);
+    std::cout << std::format("-- theory <cos phi>: {:.6f}\n", theory_cos_phi);
 
     // Phase 5: compute results
     MCResult res;
