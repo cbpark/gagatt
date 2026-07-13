@@ -33,6 +33,25 @@ struct MCConfig {
     // RNG seed (0 = random device)
     uint64_t seed = 42;
 };
+
+struct MCResult {
+    long long n_events_generated = 0;  // total accepted events
+    double mean_cos_phi = 0;           // <cos phi>
+    double sigma_cos_phi = 0;          // statistical uncertainty
+    double significance = 0;  // |<cos phi>| / sigma  (null: <cos phi>=0)
+
+    // Theoretical prediction from the density matrix
+    double theory_cos_phi = 0;      // -Tr[C]/9
+    double theory_negativity = 0;   // N[rho] integrated over phase space
+    double theory_concurrence = 0;  // C[rho] integrated over phase space
+
+    // Cross section
+    double total_xsec_fb = 0;  // total cross section [fb]
+};
+
+// Run the MC and return aggregated results.
+// Prints progress to stdout.
+MCResult runMC(const MCConfig &cfg);
 }  // namespace gagatt
 
 #endif  // SRC_MC_H
