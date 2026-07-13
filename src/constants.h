@@ -21,6 +21,9 @@ inline constexpr double MGAMMATOP2 = MGAMMATOP * MGAMMATOP;
 // derived constants
 inline constexpr double COUPLING_FACTOR =
     8.0 * std::numbers::pi * ALPHA * QTOP2;
+
+// Conversion: 1 GeV^{-2} = 0.3894 mb = 3.894e11 fb
+inline constexpr double GEV2_TO_FB = 3.893793721e11;  // exact to 10 sig figs
 }  // namespace gagatt
 
 #endif  // SRC_CONSTANTS_H

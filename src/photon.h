@@ -6,9 +6,6 @@
 #include "helicity.h"
 
 namespace gagatt {
-// Total cross sections for Compton scattering process.
-double sigmaC(double x, double pe, double pc);
-
 double fLumi(double x, double y, double pe, double pc);
 
 // z = sqrt(tau)
@@ -34,6 +31,17 @@ struct LumiWeights {
 // normalised weights for (++, +-, -+, --).
 LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
                         double pc2);
+
+// Luminosity weights plus the un-normalised total L_tot = sum_{l1,l2} L^{l1 l2}
+// L_tot has units of [1/GeV^2] (same as each individual L^{l1 l2}).
+// The MC needs this to compute the absolute event rate.
+struct LumiWeightsAndTotal {
+    LumiWeights lw;
+    double L_tot{0.0};  // sum_{l1,l2} L^{l1 l2}(z)  [GeV^-2]
+};
+
+LumiWeightsAndTotal lumiWeightsAndTotal(double z, double x, double pe1,
+                                        double pc1, double pe2, double pc2);
 }  // namespace gagatt
 
 #endif  // SRC_PHOTON_H

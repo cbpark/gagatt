@@ -138,6 +138,7 @@ PolarizationCorrelation computePolCor(double z, double x, double pe1,
 
     gsl_integration_workspace_free(w);
 
+    // 2.0 * z is the Jacobian factor for d tau --> d sqrt(tau)
     return PolarizationCorrelation{c00, c20, c02, c22} * (2.0 * z);
 }
 
@@ -189,5 +190,35 @@ LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
     const double inv_sum = 1.0 / sum;
     return LumiWeights{{lumi[0] * inv_sum, lumi[1] * inv_sum, lumi[2] * inv_sum,
                         lumi[3] * inv_sum}};
+}
+
+LumiWeightsAndTotal lumiWeightsAndTotal(double z, double x,
+                                        double pe1, double pc1,
+                                        double pe2, double pc2) {
+    const double sigma_c1 = sigmaC(x, pe1, pc1);
+    const double sigma_c2 = sigmaC(x, pe2, pc2);
+    if (sigma_c1 <= 0.0 || sigma_c2 <= 0.0) { return {}; }
+
+    const auto pc = computePolCor(z, x, pe1, pc1, pe2, pc2);
+    const double inv_sigma = 1.0 / (sigma_c1 * sigma_c2);
+
+    // L_{l1,l2} = (c00 + l1*c20 + l2*c02 + l1*l2*c22) / (sigma1*sigma2)
+    std::array<double, 4> lumi{};
+    int idx = 0;
+    for (double l1 : {+1.0, -1.0}) {
+        for (double l2 : {+1.0, -1.0}) {
+            lumi[idx++] =
+                (pc.c00 + l1 * pc.c20 + l2 * pc.c02 + l1 * l2 * pc.c22) *
+                inv_sigma;
+        }
+    }
+
+    const double sum = lumi[0] + lumi[1] + lumi[2] + lumi[3];
+    if (sum < 1e-15) { return {}; }
+
+    const double inv_sum = 1.0 / sum;
+    LumiWeights lw{{lumi[0] * inv_sum, lumi[1] * inv_sum,
+                    lumi[2] * inv_sum, lumi[3] * inv_sum}};
+    return {lw, sum};
 }
 }  // namespace gagatt
