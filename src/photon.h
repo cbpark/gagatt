@@ -6,6 +6,9 @@
 #include "helicity.h"
 
 namespace gagatt {
+// Total cross sections for Compton scattering process.
+double sigmaC(double x, double pe, double pc);
+
 double fLumi(double x, double y, double pe, double pc);
 
 // z = sqrt(tau)

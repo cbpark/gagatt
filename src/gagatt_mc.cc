@@ -33,4 +33,7 @@ int main(int argc, char *argv[]) {
 
     // Derived: sqrts_max = sqrt_s (kinematic ceiling)
     cfg.sqrts_max = cfg.sqrt_s;
+
+    // Print run summary
+    const MCResult res = runMC(cfg);
 }
