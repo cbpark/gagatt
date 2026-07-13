@@ -36,4 +36,6 @@ int main(int argc, char *argv[]) {
 
     // Print run summary
     const MCResult res = runMC(cfg);
+
+    return (res.n_events_generated > 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
