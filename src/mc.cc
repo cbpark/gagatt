@@ -315,6 +315,7 @@ MCResult runMC(const MCConfig &cfg) {
 
     // D = Tr[C]/3 ;  significance vs null (D = 0)
     const double sigma_D = sigma_tr_c / 3.0;
+    // significance = |D| / sigma_D (in units of sigma).
     const double significance_D =
         (sigma_D > 0.0) ? std::abs(mc_tr_c / 3.0) / sigma_D : 0.0;
 
@@ -324,8 +325,11 @@ MCResult runMC(const MCConfig &cfg) {
     const double mc_concurrence = getConcurrence(mc_rho);
     const double mc_m12 = m12FromCij(mc_cij);
 
-    // Significance of Bell inequality violation (m12 > 1 vs null m12 = 1):
-    //   sigma^2[m12] <= 2 * sum_{i,j} sigma^2[C_ij]  (propagation bound)
+    // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
+    //
+    // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
+    // valid as an order-of-magnitude estimate near the Bell boundary (m12 ~ 1).
+    // Exact propagation requires eigenvectors of C*C^T.
     const double sigma_m12 =
         std::sqrt(2.0 * sigma_cij.cwiseProduct(sigma_cij).sum());
     const double significance_bell =
