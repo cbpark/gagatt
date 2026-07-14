@@ -17,6 +17,8 @@ inline constexpr double TTBARTHRES = 2.0 * MTOP;
 inline constexpr double GAMMATOP = 1.4;
 inline constexpr double MGAMMATOP = MTOP * GAMMATOP;
 inline constexpr double MGAMMATOP2 = MGAMMATOP * MGAMMATOP;
+inline constexpr double BRLL = 0.0455; // BR(t tbar --> l l)
+inline constexpr double BRLJ = 0.2877; // BR(t tbar --> l j)
 
 // derived constants
 inline constexpr double COUPLING_FACTOR =

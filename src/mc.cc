@@ -45,6 +45,7 @@ double partialXsec(double sqrt_s_hat, double cos_th,
 //   d^2 N / (d sqrt_s_hat  d cos_th)
 //
 //   = partialXsec [GeV^{-2}]
+//     * BR(t tbar --> l l / l j)
 //     * L_tot(z)  [GeV^{-2}]   (photon lumi per unit z = sqrt_tau)
 //     * L_ee      [fb^{-1}]
 //     * GEV2_TO_FB
@@ -56,7 +57,7 @@ double eventRate(double sqrt_s_hat, double cos_th,
     const double xsec = partialXsec(sqrt_s_hat, cos_th, sdc);
     if (xsec <= 0.0 || L_tot <= 0.0) { return 0.0; }
 
-    return xsec * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
+    return xsec * BRLL * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
 }
 
 // -----------------------------------------------------------------------
@@ -391,7 +392,7 @@ MCResult runMC(const MCConfig &cfg) {
     std::vector<LumiScanPoint> lumi_scan;
 
     if (cfg.L_scan_min_ab < cfg.L_scan_max_ab && cfg.n_L_points > 1) {
-        const double sigma_tot_fb = res.total_xsec_fb;  // [fb]
+        const double sigma_tot_fb = total_weight / cfg.L_ee_fb;  // [fb]
         const double N_MC = static_cast<double>(n_accepted);
 
         const double dL = (cfg.L_scan_max_ab - cfg.L_scan_min_ab) /
