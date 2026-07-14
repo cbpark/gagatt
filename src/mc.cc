@@ -313,11 +313,12 @@ MCResult runMC(const MCConfig &cfg) {
         9.0 * std::sqrt(std::max(
                   0.0, var_mean(0, 0) + var_mean(1, 1) + var_mean(2, 2)));
 
-    // D = Tr[C]/3 ;  significance vs null (D = 0)
+    // D = Tr[C]/3 ;  significance vs null (D = -1/3)
     const double sigma_D = sigma_tr_c / 3.0;
-    // significance = |D| / sigma_D (in units of sigma).
+    const double D_val = mc_tr_c / 3.0;
+    const double D_excess = -D_val - 1.0 / 3.0;  // positive when D < -1/3
     const double significance_D =
-        (sigma_D > 0.0) ? std::abs(mc_tr_c / 3.0) / sigma_D : 0.0;
+        (sigma_D > 0.0 && D_excess > 0.0) ? D_excess / sigma_D : 0.0;
 
     // Reconstruct density matrix from C_ij^MC (B+ = B- = 0 at LO)
     const Matrix4cd mc_rho = reconstructRho(mc_cij);
@@ -421,7 +422,9 @@ MCResult runMC(const MCConfig &cfg) {
 
             const double scale = std::sqrt(N_L / N_MC);
 
-            const double sig_D_L = significance_D * scale;
+            // const double sig_D_L = significance_D * scale;
+            const double sig_D_L =
+                (significance_D > 0.0) ? significance_D * scale : 0.0;
 
             const double sig_bell_L = (mc_m12 > 1.0 && sigma_m12 > 0.0)
                                           ? (mc_m12 - 1.0) / (sigma_m12 / scale)
