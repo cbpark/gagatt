@@ -24,7 +24,6 @@ struct MCConfig {
     double pe1 = +1.0;      // electron polarization Pe
     double pe2 = +1.0;      // positron polarization Pe~
     double x = X_DEFAULT;
-    double L_ee_fb = 1000.0;  // integrated luminosity [fb^-1]
 
     // Phase-space scan ranges
     double sqrts_min = 2.0 * MTOP + 1.0;  // just above threshold [GeV]

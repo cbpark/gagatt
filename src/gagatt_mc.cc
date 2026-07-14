@@ -46,10 +46,6 @@ int main(int argc, char *argv[]) {
     cfg.L_scan_max_ab = (argc >= 7) ? std::stod(argv[6]) : 2.0;
     cfg.n_L_points = (argc >= 8) ? std::stoi(argv[7]) : 200;
 
-    // L_ee_fb is only used internally by mc.cc for the weight normalization;
-    // set it to n_events so weights come out in natural units.
-    // The significance scan uses sigma_tot and N_MC directly:see mc.cc Phase 7.
-    cfg.L_ee_fb = static_cast<double>(cfg.n_events);  // dummy; see mc.cc
     cfg.sqrts_max = cfg.sqrt_s;
 
     const MCResult res = runMC(cfg);

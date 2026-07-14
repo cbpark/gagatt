@@ -46,17 +46,15 @@ double partialXsec(double sqrt_s_hat, double cos_th,
 //
 //   = partialXsec [GeV^{-2}]
 //     * L_tot(z)  [GeV^{-2}]   (photon lumi per unit z = sqrt_tau)
-//     * L_ee      [fb^{-1}]
 //     * GEV2_TO_FB
 //     / sqrt_s    [GeV]         (Jacobian: dz = d(sqrt_s_hat)/sqrt_s)
 // -----------------------------------------------------------------------
 double eventRate(double sqrt_s_hat, double cos_th,
-                 const SDMatrixCoefficients &sdc, double L_tot, double sqrt_s,
-                 double L_ee_fb) {
+                 const SDMatrixCoefficients &sdc, double L_tot, double sqrt_s) {
     const double xsec = partialXsec(sqrt_s_hat, cos_th, sdc);
     if (xsec <= 0.0 || L_tot <= 0.0) { return 0.0; }
 
-    return xsec * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
+    return xsec * L_tot * GEV2_TO_FB / sqrt_s;
 }
 
 // -----------------------------------------------------------------------
@@ -142,9 +140,8 @@ MCResult runMC(const MCConfig &cfg) {
     const double pc2 = -cfg.pe2;
 
     std::cout << std::format(
-        "gagatt_mc: sqrt_s={:.0f} GeV, pe1={:+.2f}, pe2={:+.2f}, "
-        "x={:.1f}, L={:.0f} fb^-1\n",
-        cfg.sqrt_s, cfg.pe1, cfg.pe2, cfg.x, cfg.L_ee_fb);
+        "gagatt_mc: sqrt_s={:.0f} GeV, pe1={:+.2f}, pe2={:+.2f}, x={:.1f}\n",
+        cfg.sqrt_s, cfg.pe1, cfg.pe2, cfg.x);
     std::cout << std::format(
         "  sqrt_s_hat in [{:.1f}, {:.1f}] GeV, "
         "cos_th in [{:.2f}, {:.2f}]\n",
@@ -196,8 +193,7 @@ MCResult runMC(const MCConfig &cfg) {
             const Matrix4cd rho = spinDensityMatrix(sdc);
 
             const double rate =
-                eventRate(sqrt_s_hat, cos_th, sdc, zcache[j].L_tot, cfg.sqrt_s,
-                          cfg.L_ee_fb) *
+                eventRate(sqrt_s_hat, cos_th, sdc, zcache[j].L_tot, cfg.sqrt_s) *
                 d_sqrts * d_cos;
 
             const int idx = i * cfg.n_sqrts + j;
@@ -319,6 +315,12 @@ MCResult runMC(const MCConfig &cfg) {
     const double D_excess = -D_val - 1.0 / 3.0;  // positive when D < -1/3
     const double significance_D =
         (sigma_D > 0.0 && D_excess > 0.0) ? D_excess / sigma_D : 0.0;
+    std::cout << std::format(" D_val              : {:+.6f}\n", D_val);
+    std::cout << std::format(" D_excess (|D|-1/3) : {:+.6f}\n", D_excess);
+    std::cout << std::format(" sigma_D (N_MC)     : {:.6f}\n", sigma_D);
+    std::cout << std::format(
+        " sig_D at N_MC      : {:.2f} sigma\n",
+        (sigma_D > 0.0 && D_excess > 0.0) ? D_excess / sigma_D : 0.0);
 
     // Reconstruct density matrix from C_ij^MC (B+ = B- = 0 at LO)
     const Matrix4cd mc_rho = reconstructRho(mc_cij);
@@ -342,13 +344,15 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << "\n-- MC results --\n";
     std::cout << std::format("  N events generated   : {}\n", n_accepted);
 
-    const double sigma_prod_fb = total_weight / cfg.L_ee_fb;
+    const double sigma_prod_fb = total_weight;
     const double sigma_eff_fb = sigma_prod_fb * BRLL;
     std::cout << std::format(" production xsec (ee->gaga->tt): {:.4f} fb\n",
                              sigma_prod_fb);
     std::cout << std::format(" effective xsec  (* BR_ll)     : {:.4f} fb\n",
                              sigma_eff_fb);
     std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
+    std::cout << std::format(" N(L=0.01 ab^-1)    : {:.1f} events\n",
+                             sigma_eff_fb * 10.0);
 
     std::cout << "\n  Reconstructed C_ij  (rows: n,r,k; cols: n,r,k)\n";
     const std::array<const char *, 3> ax = {"n", "r", "k"};
@@ -375,10 +379,17 @@ MCResult runMC(const MCConfig &cfg) {
                              mc_concurrence);
     std::cout << std::format("  concurrence (theory) : {:.6f}\n", theory_con);
 
-    std::cout << std::format("\n  m12         (MC)     : {:.6f}\n", mc_m12);
-    std::cout << std::format("  m12         (theory) : {:.6f}\n", theory_m12);
-    std::cout << std::format("  significance(Bell)   : {:.2f} sigma\n",
-                             significance_bell);
+    // std::cout << std::format("\n  m12         (MC)     : {:.6f}\n", mc_m12);
+    // std::cout << std::format("  m12         (theory) : {:.6f}\n",
+    // theory_m12); std::cout << std::format("  significance(Bell)   : {:.2f}
+    // sigma\n",
+    //                          significance_bell);
+    std::cout << std::format(" m12 (MC)          : {:.6f}\n", mc_m12);
+    std::cout << std::format(" m12 - 1           : {:.6f}\n", mc_m12 - 1.0);
+    std::cout << std::format(" sigma_m12 (N_MC)  : {:.6f}\n", sigma_m12);
+    std::cout << std::format(
+        " sig_Bell at N_MC  : {:.2f} sigma\n",
+        (mc_m12 > 1.0 && sigma_m12 > 0.0) ? (mc_m12 - 1.0) / sigma_m12 : 0.0);
 
     // ------------------------------------------------------------------
     // Phase 7: luminosity scan
@@ -460,7 +471,7 @@ MCResult runMC(const MCConfig &cfg) {
     res.theory_concurrence = theory_con;
     res.theory_negativity = theory_neg;
     res.theory_m12 = theory_m12;
-    res.total_xsec_fb = total_weight / cfg.L_ee_fb;
+    res.total_xsec_fb = total_weight;
     res.lumi_scan = std::move(lumi_scan);
     return res;
 }
