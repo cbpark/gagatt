@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
         ofs << std::format("# MC m12    = {:.6f}\n", res.mc_m12);
         ofs << std::format(
             "# note: significance(L) = significance(N_MC)"
-            " * sqrt(sigma_tot[fb] * L[fb^-1] / N_MC)\n");
+            " * sqrt(sigma_tot[fb] * L[ab^-1] * 1e3 / N_MC)\n");
         ofs << std::format("#\n");
         ofs << std::format("# {:>12s}  {:>16s}  {:>16s}\n", "L[ab^-1]",
                            "sig_D[sigma]", "sig_Bell[sigma]");

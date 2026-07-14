@@ -42,7 +42,7 @@ double partialXsec(double sqrt_s_hat, double cos_th,
 
 // -----------------------------------------------------------------------
 // eventRate:
-//   d^2 N / (d sqrt_s_hat  d cos_th)
+//   d^2 sigma / (d sqrt_s_hat  d cos_th)
 //
 //   = partialXsec [GeV^{-2}]
 //     * L_tot(z)  [GeV^{-2}]   (photon lumi per unit z = sqrt_tau)

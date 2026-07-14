@@ -52,7 +52,7 @@ struct MCConfig {
 
 struct LumiScanPoint {
     double L_ab;               // luminosity [ab^-1]
-    double significance_D;     // |D| / sigma_D
+    double significance_D;     // (|D| - 1/3) / sigma_D
     double significance_bell;  // (m12-1) / sigma_m12  (0 if m12 <= 1)
 };
 
@@ -69,7 +69,7 @@ struct MCResult {
     double mc_tr_c = 0.0;
     double sigma_tr_c = 0.0;
 
-    // Significance of D < -1/3 vs null (D = 0): |D| / sigma_D
+    // Significance of entanglement: (|D| - 1/3) / sigma_D  when D < -1/3
     double significance_D = 0.0;
 
     // Quantum-information quantities derived from reconstructed C_ij
