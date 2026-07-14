@@ -45,7 +45,6 @@ double partialXsec(double sqrt_s_hat, double cos_th,
 //   d^2 N / (d sqrt_s_hat  d cos_th)
 //
 //   = partialXsec [GeV^{-2}]
-//     * BR(t tbar --> l l / l j)
 //     * L_tot(z)  [GeV^{-2}]   (photon lumi per unit z = sqrt_tau)
 //     * L_ee      [fb^{-1}]
 //     * GEV2_TO_FB
@@ -57,7 +56,7 @@ double eventRate(double sqrt_s_hat, double cos_th,
     const double xsec = partialXsec(sqrt_s_hat, cos_th, sdc);
     if (xsec <= 0.0 || L_tot <= 0.0) { return 0.0; }
 
-    return xsec * BRLL * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
+    return xsec * L_tot * L_ee_fb * GEV2_TO_FB / sqrt_s;
 }
 
 // -----------------------------------------------------------------------
@@ -341,8 +340,14 @@ MCResult runMC(const MCConfig &cfg) {
     // ------------------------------------------------------------------
     std::cout << "\n-- MC results --\n";
     std::cout << std::format("  N events generated   : {}\n", n_accepted);
-    std::cout << std::format("  total xsec           : {:.4f} fb\n",
-                             total_weight / cfg.L_ee_fb);
+
+    const double sigma_prod_fb = total_weight / cfg.L_ee_fb;
+    const double sigma_eff_fb = sigma_prod_fb * BRLL;
+    std::cout << std::format(" production xsec (ee->gaga->tt): {:.4f} fb\n",
+                             sigma_prod_fb);
+    std::cout << std::format(" effective xsec  (* BR_ll)     : {:.4f} fb\n",
+                             sigma_eff_fb);
+    std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
 
     std::cout << "\n  Reconstructed C_ij  (rows: n,r,k; cols: n,r,k)\n";
     const std::array<const char *, 3> ax = {"n", "r", "k"};
@@ -380,19 +385,18 @@ MCResult runMC(const MCConfig &cfg) {
     // The MC was run with N_MC = cfg.n_events (unweighted accepted events).
     // The physical event count at luminosity L [ab^-1] is:
     //
-    //   N(L) = sigma_tot [fb] * L [fb^-1]
-    //         = sigma_tot [fb] * L [ab^-1] * 1e3  (1 ab^-1 = 1000 fb^-1)
+    //   N(L) = sigma_eff [fb] * L [fb^-1]
+    //         = sigma_eff [fb] * L [ab^-1] * 1e3  (1 ab^-1 = 1000 fb^-1)
     //
     // Statistical uncertainties scale as 1/sqrt(N), so:
     //
     //   sigma_X(L)     = sigma_X(N_MC) * sqrt(N_MC / N(L))
     //   significance(L) = significance(N_MC) * sqrt(N(L) / N_MC)
-    //                   = significance(N_MC) * sqrt(sigma_tot * L * 1e3 / N_MC)
+    //                   = significance(N_MC) * sqrt(sigma_eff * L * 1e3 / N_MC)
     // ------------------------------------------------------------------
     std::vector<LumiScanPoint> lumi_scan;
 
     if (cfg.L_scan_min_ab < cfg.L_scan_max_ab && cfg.n_L_points > 1) {
-        const double sigma_tot_fb = total_weight / cfg.L_ee_fb;  // [fb]
         const double N_MC = static_cast<double>(n_accepted);
 
         const double dL = (cfg.L_scan_max_ab - cfg.L_scan_min_ab) /
@@ -401,15 +405,14 @@ MCResult runMC(const MCConfig &cfg) {
         std::cout << std::format(
             "\n-- luminosity scan [{:.3f}, {:.3f}] ab^-1, {} points\n",
             cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points);
-        std::cout << std::format("   sigma_tot = {:.4f} fb,  N_MC = {:.0f}\n",
-                                 sigma_tot_fb, N_MC);
+        std::cout << std::format("   N_MC = {:.0f}\n", N_MC);
 
         lumi_scan.reserve(cfg.n_L_points);
 
         for (int p = 0; p < cfg.n_L_points; ++p) {
             const double L_ab = cfg.L_scan_min_ab + p * dL;
             const double L_fb = L_ab * 1.0e3;        // ab^-1 -> fb^-1
-            const double N_L = sigma_tot_fb * L_fb;  // physical event count
+            const double N_L = sigma_eff_fb * L_fb;  // physical event count
 
             if (N_L <= 0.0) {
                 lumi_scan.push_back({L_ab, 0.0, 0.0});
