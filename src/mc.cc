@@ -374,7 +374,69 @@ MCResult runMC(const MCConfig &cfg) {
                              significance_bell);
 
     // ------------------------------------------------------------------
-    // Phase 7: fill and return MCResult
+    // Phase 7: luminosity scan
+    //
+    // The MC was run with N_MC = cfg.n_events (unweighted accepted events).
+    // The physical event count at luminosity L [ab^-1] is:
+    //
+    //   N(L) = sigma_tot [fb] * L [fb^-1]
+    //         = sigma_tot [fb] * L [ab^-1] * 1e3  (1 ab^-1 = 1000 fb^-1)
+    //
+    // Statistical uncertainties scale as 1/sqrt(N), so:
+    //
+    //   sigma_X(L)     = sigma_X(N_MC) * sqrt(N_MC / N(L))
+    //   significance(L) = significance(N_MC) * sqrt(N(L) / N_MC)
+    //                   = significance(N_MC) * sqrt(sigma_tot * L * 1e3 / N_MC)
+    // ------------------------------------------------------------------
+    std::vector<LumiScanPoint> lumi_scan;
+
+    if (cfg.L_scan_min_ab < cfg.L_scan_max_ab && cfg.n_L_points > 1) {
+        const double sigma_tot_fb = res.total_xsec_fb;  // [fb]
+        const double N_MC = static_cast<double>(n_accepted);
+
+        const double dL = (cfg.L_scan_max_ab - cfg.L_scan_min_ab) /
+                          static_cast<double>(cfg.n_L_points - 1);
+
+        std::cout << std::format(
+            "\n-- luminosity scan [{:.3f}, {:.3f}] ab^-1, {} points\n",
+            cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points);
+        std::cout << std::format("   sigma_tot = {:.4f} fb,  N_MC = {:.0f}\n",
+                                 sigma_tot_fb, N_MC);
+
+        lumi_scan.reserve(cfg.n_L_points);
+
+        for (int p = 0; p < cfg.n_L_points; ++p) {
+            const double L_ab = cfg.L_scan_min_ab + p * dL;
+            const double L_fb = L_ab * 1.0e3;        // ab^-1 -> fb^-1
+            const double N_L = sigma_tot_fb * L_fb;  // physical event count
+
+            if (N_L <= 0.0) {
+                lumi_scan.push_back({L_ab, 0.0, 0.0});
+                continue;
+            }
+
+            const double scale = std::sqrt(N_L / N_MC);
+
+            const double sig_D_L = significance_D * scale;
+
+            const double sig_bell_L = (mc_m12 > 1.0 && sigma_m12 > 0.0)
+                                          ? (mc_m12 - 1.0) / (sigma_m12 / scale)
+                                          : 0.0;
+
+            lumi_scan.push_back({L_ab, sig_D_L, sig_bell_L});
+        }
+
+        // Print table to stdout
+        std::cout << std::format(" {:>12s}  {:>16s}  {:>16s}\n", "L[ab^-1]",
+                                 "sig_D[sigma]", "sig_Bell[sigma]");
+        for (const auto &pt : lumi_scan) {
+            std::cout << std::format(" {:12.6f}  {:16.6f}  {:16.6f}\n", pt.L_ab,
+                                     pt.significance_D, pt.significance_bell);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Phase 8: fill and return MCResult
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = n_accepted;
@@ -392,6 +454,7 @@ MCResult runMC(const MCConfig &cfg) {
     res.theory_negativity = theory_neg;
     res.theory_m12 = theory_m12;
     res.total_xsec_fb = total_weight / cfg.L_ee_fb;
+    res.lumi_scan = std::move(lumi_scan);
     return res;
 }
 

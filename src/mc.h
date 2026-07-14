@@ -41,6 +41,20 @@ struct MCConfig {
 
     // RNG seed (0 = random_device)
     uint64_t seed = 42;
+
+    // ----------------------------------------------------------------
+    // Luminosity scan for significance plot
+    // L_scan_min / L_scan_max  [ab^-1]   (0 disables the scan)
+    // ----------------------------------------------------------------
+    double L_scan_min_ab = 0.0;  // [ab^-1]
+    double L_scan_max_ab = 2.0;  // [ab^-1]
+    int n_L_points = 200;
+};
+
+struct LumiScanPoint {
+    double L_ab;               // luminosity [ab^-1]
+    double significance_D;     // |D| / sigma_D
+    double significance_bell;  // (m12-1) / sigma_m12  (0 if m12 <= 1)
 };
 
 struct MCResult {
@@ -78,6 +92,9 @@ struct MCResult {
 
     // Total cross section
     double total_xsec_fb = 0.0;  // [fb]
+
+    // Luminosity scan (empty if L_scan_min_ab == 0)
+    std::vector<LumiScanPoint> lumi_scan;
 };
 
 // Run the MC simulation and return aggregated results.
