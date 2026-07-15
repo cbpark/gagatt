@@ -7,7 +7,7 @@ LDFLAGS  := -lm
 
 EXENAME := gagatt_unpol sqrt_s_hat_unpol gagatt_pol_perfect gagatt_pol \
 	luminosity luminosity_weight \
-	gagatt_mc \
+	gagatt_mc gagatt_dscan \
 	test
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
