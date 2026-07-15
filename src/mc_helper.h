@@ -136,7 +136,10 @@ struct ReconstructedMC {
     double significance_D = 0.0;  // (-1/3 - D) / sigma_D when D < -1/3
 
     double mc_negativity = 0.0;
+
     double mc_concurrence = 0.0;
+    double sigma_concurrence = 0.0;
+    double significance_concurrence = 0.0;
 
     double mc_m12 = 0.0;
     double sigma_m12 = 0.0;
@@ -156,14 +159,15 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev);
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
                                            long long n_accepted,
+                                           double significance_concurrence,
                                            double significance_D, double mc_m12,
                                            double sigma_m12);
 
 // -----------------------------------------------------------------------
 // DScanConfig
 //
-// Configuration for a 1-D scan of D vs sqrt(s_hat), with a fixed cut on
-// cos(Theta) applied within each sqrt(s_hat) bin (cos(Theta) is
+// Configuration for a 1-D scan of observable vs sqrt(s_hat), with a fixed cut
+// on cos(Theta) applied within each sqrt(s_hat) bin (cos(Theta) is
 // integrated/sampled only over [cos_th_min, cos_th_max], not scanned).
 // -----------------------------------------------------------------------
 struct DScanConfig {
@@ -178,17 +182,25 @@ struct DScanConfig {
 // -----------------------------------------------------------------------
 // DScanBinResult
 //
-// D (theory + MC) and associated quantities in one sqrt(s_hat) bin,
+// Observable quantities in one sqrt(s_hat) bin,
 // integrated/sampled over the fixed cos(Theta) cut window.
 // -----------------------------------------------------------------------
 struct DScanBinResult {
     double sqrts_lo = 0.0;
     double sqrts_hi = 0.0;
     double sqrts_mid = 0.0;
+
+    double theory_concurrence = 0.0;
     double theory_D = 0.0;
+
+    double mc_concurrence = 0.0;
+    double sigma_concurrence = 0.0;
+    double significance_concurrence = 0.0;
+
     double mc_D = 0.0;
     double sigma_D = 0.0;
     double significance_D = 0.0;
+
     double bin_xsec_fb = 0.0;  // integrated xsec over cos_th cut window
     long long n_events = 0;
 };

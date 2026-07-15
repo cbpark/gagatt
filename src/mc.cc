@@ -47,21 +47,6 @@ MCResult runMC(const MCConfig &cfg) {
         buildWeightTable(cfg, zcache, sqrts_min, d_sqrts, d_cos);
     if (wt.bin_weights.empty()) { return {}; }
 
-    std::cout << std::format("-- total expected events : {:.3e}\n",
-                             wt.total_weight);
-    std::cout << std::format("-- theory Tr[C]          : {:+.6f}\n",
-                             wt.theory_tr_c);
-    std::cout << std::format("-- theory D              : {:+.6f}\n",
-                             wt.theory_D);
-    std::cout << std::format("-- theory <q+q->         : {:+.6f}\n",
-                             -wt.theory_tr_c / 9.0);
-    std::cout << std::format("-- theory negativity     : {:.6f}\n",
-                             wt.theory_negativity);
-    std::cout << std::format("-- theory concurrence    : {:.6f}\n",
-                             wt.theory_concurrence);
-    std::cout << std::format("-- theory m12            : {:.6f}\n",
-                             wt.theory_m12);
-
     // Phase 3/4: event loop (bin sampler is internal to runEventLoop)
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
@@ -70,18 +55,12 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 5: reconstruct C_ij and all derived quantities
     const ReconstructedMC r = reconstructFromMoments(ev);
 
-    std::cout << std::format(" D_val              : {:+.6f}\n", r.mc_D);
-    std::cout << std::format(" D_excess (-1/3-D)  : {:+.6f}\n",
-                             -1.0 / 3.0 - r.mc_D);
-    std::cout << std::format(" sigma_D (N_MC)     : {:.6f}\n", r.sigma_D);
-    std::cout << std::format(" sig_D at N_MC      : {:.2f} sigma\n",
-                             r.significance_D);
-
     // ------------------------------------------------------------------
     // Phase 6: print results
     // ------------------------------------------------------------------
     std::cout << "\n-- MC results --\n";
-    std::cout << std::format(" N events generated : {}\n", ev.n_accepted);
+    std::cout << std::format(" N events generated            : {}\n",
+                             ev.n_accepted);
 
     const double sigma_prod_fb = wt.total_weight;
     const double sigma_eff_fb = sigma_prod_fb * BRLL;
@@ -115,38 +94,30 @@ MCResult runMC(const MCConfig &cfg) {
     }
 
     std::cout << std::format(
-        "\n Tr[C] (MC)                    : {:+.6f} +/- {:.6f}\n", r.mc_tr_c,
-        r.sigma_tr_c);
-    std::cout << std::format(" Tr[C] (theory)                : {:+.6f}\n",
-                             wt.theory_tr_c);
+        "\n Concurrence (MC)          : {:+.6f} +/- {:.6f}\n", r.mc_concurrence,
+        r.sigma_concurrence);
+    std::cout << std::format(" Concurrence (theory)      : {:+.6f}\n",
+                             wt.theory_concurrence);
+    std::cout << std::format(" significance(Concurrence) : {:.2f} sigma\n",
+                             r.significance_concurrence);
     std::cout << std::format(
-        " D=(Cnn-|Crr+Ckk|)/3 (MC)      : {:+.6f} +/- {:.6f}\n", r.mc_D,
+        "\n D=(Cnn-|Crr+Ckk|)/3 (MC)     : {:+.6f} +/- {:.6f}\n", r.mc_D,
         r.sigma_D);
-    std::cout << std::format(" D=(Cnn-|Crr+Ckk|)/3 (theory)  : {:+.6f}\n",
+    std::cout << std::format(" D=(Cnn-|Crr+Ckk|)/3 (theory) : {:+.6f}\n",
                              wt.theory_D);
-    std::cout << std::format(" significance(D)               : {:.2f} sigma\n",
+    std::cout << std::format(" significance(D)              : {:.2f} sigma\n",
                              r.significance_D);
 
-    std::cout << std::format("\n negativity (MC)      : {:.6f}\n",
-                             r.mc_negativity);
-    std::cout << std::format(" negativity (theory)  : {:.6f}\n",
-                             wt.theory_negativity);
-    std::cout << std::format(" concurrence (MC)     : {:.6f}\n",
-                             r.mc_concurrence);
-    std::cout << std::format(" concurrence (theory) : {:.6f}\n",
-                             wt.theory_concurrence);
-
-    std::cout << std::format(" m12 (MC)             : {:.6f}\n", r.mc_m12);
-    std::cout << std::format(" m12 - 1              : {:.6f}\n",
-                             r.mc_m12 - 1.0);
-    std::cout << std::format(" sigma_m12 (N_MC)     : {:.6f}\n", r.sigma_m12);
-    std::cout << std::format(" sig_Bell at N_MC     : {:.2f} sigma\n",
+    std::cout << std::format("\n m12 (MC)         : {:.6f}\n", r.mc_m12);
+    std::cout << std::format(" m12 - 1          : {:.6f}\n", r.mc_m12 - 1.0);
+    std::cout << std::format(" sigma_m12 (N_MC) : {:.6f}\n", r.sigma_m12);
+    std::cout << std::format(" sig_Bell at N_MC : {:.2f} sigma\n",
                              r.significance_bell);
 
     // Phase 7: luminosity scan
-    const std::vector<LumiScanPoint> lumi_scan =
-        computeLumiScan(cfg, sigma_eff_fb, ev.n_accepted, r.significance_D,
-                        r.mc_m12, r.sigma_m12);
+    const std::vector<LumiScanPoint> lumi_scan = computeLumiScan(
+        cfg, sigma_eff_fb, ev.n_accepted, r.significance_concurrence,
+        r.significance_D, r.mc_m12, r.sigma_m12);
 
     // ------------------------------------------------------------------
     // Phase 8: fill and return MCResult

@@ -69,6 +69,8 @@ int main(int argc, char *argv[]) {
         ofs << std::format("# pe2       = {:+.2f}\n", cfg.pe2);
         ofs << std::format("# N_MC      = {}\n", res.n_events_generated);
         ofs << std::format("# sigma_tot = {:.6f} fb\n", res.total_xsec_fb);
+        ofs << std::format("# theory C  = {:.6f}\n", res.theory_concurrence);
+        ofs << std::format("# MC C      = {:.6f}\n", res.mc_concurrence);
         ofs << std::format("# theory D  = {:.6f}\n", res.theory_D);
         ofs << std::format("# MC D      = {:.6f}\n", res.mc_D);
         ofs << std::format("# theory m12= {:.6f}\n", res.theory_m12);
@@ -77,12 +79,14 @@ int main(int argc, char *argv[]) {
             "# note: significance(L) = significance(N_MC)"
             " * sqrt(sigma_tot[fb] * L[ab^-1] * 1e3 / N_MC)\n");
         ofs << std::format("#\n");
-        ofs << std::format("# {:>12s}  {:>16s}  {:>16s}\n", "L[ab^-1]",
-                           "sig_D[sigma]", "sig_Bell[sigma]");
+        ofs << std::format("# {:>12s} {:>16s} {:>16s} {:>16s}\n", "L[ab^-1]",
+                           "sig_C[sigma]", "sig_D[sigma]", "sig_Bell[sigma]");
 
-        for (const auto &pt : res.lumi_scan)
-            ofs << std::format("  {:12.6f}  {:16.6f}  {:16.6f}\n", pt.L_ab,
+        for (const auto &pt : res.lumi_scan) {
+            ofs << std::format(" {:12.6f} {:16.6f} {:16.6f} {:16.6f}\n",
+                               pt.L_ab, pt.significance_concurrence,
                                pt.significance_D, pt.significance_bell);
+        }
 
         std::cout << std::format("\n-- scan written to: {}\n", fname);
     }

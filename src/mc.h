@@ -51,7 +51,8 @@ struct MCConfig {
 };
 
 struct LumiScanPoint {
-    double L_ab;               // luminosity [ab^-1]
+    double L_ab;  // luminosity [ab^-1]
+    double significance_concurrence = 0.0;
     double significance_D;     // (-1/3 - D) / sigma_D (0 if D >= -1/3)
     double significance_bell;  // (m12-1) / sigma_m12 (0 if m12 <= 1)
 };

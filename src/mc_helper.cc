@@ -288,10 +288,29 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 
     // Reconstruct density matrix from B+^MC, B-^MC, C_ij^MC
     const Matrix4cd mc_rho = reconstructRho(r.mc_bp, r.mc_bm, r.mc_cij);
-    r.mc_negativity = negativity(mc_rho);
-    r.mc_concurrence = getConcurrence(mc_rho);
-    r.mc_m12 = m12FromCij(r.mc_cij);
 
+    r.mc_negativity = negativity(mc_rho);
+
+    r.mc_concurrence = getConcurrence(mc_rho);
+    // Approximation: C depends only on diagonal C_ij elements. Then,
+    //
+    // C = max(0, A_+, A_-)
+    //
+    // A = 1/2 (|Ckk +- Cnn| - |1 -+ Crr|)
+    //
+    // sigma_C = (1/2) * sqrt(sigma_nn^2 + sigma_rr^2 + sigma_kk^2)
+    // This is exact for diagonal C (B=0) and conservative otherwise.
+    const double s_nn = r.sigma_cij(0, 0);
+    const double s_rr = r.sigma_cij(1, 1);
+    const double s_kk = r.sigma_cij(2, 2);
+    r.sigma_concurrence =
+        0.5 * std::sqrt(s_nn * s_nn + s_rr * s_rr + s_kk * s_kk);
+    r.significance_concurrence =
+        (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
+            ? r.mc_concurrence / r.sigma_concurrence
+            : 0.0;
+
+    r.mc_m12 = m12FromCij(r.mc_cij);
     // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
     //
     // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
@@ -323,6 +342,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
                                            long long n_accepted,
+                                           double significance_concurrence,
                                            double significance_D, double mc_m12,
                                            double sigma_m12) {
     std::vector<LumiScanPoint> lumi_scan;
@@ -345,11 +365,15 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
         const double N_L = sigma_eff_fb * L_fb;  // physical event count
 
         if (N_L <= 0.0) {
-            lumi_scan.push_back({L_ab, 0.0, 0.0});
+            lumi_scan.push_back({L_ab, 0.0, 0.0, 0.0});
             continue;
         }
 
         const double scale = std::sqrt(N_L / N_MC);
+
+        const double sig_C_L = (significance_concurrence > 0.0)
+                                   ? significance_concurrence * scale
+                                   : 0.0;
 
         const double sig_D_L =
             (significance_D > 0.0) ? significance_D * scale : 0.0;
@@ -358,7 +382,7 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                       ? (mc_m12 - 1.0) / (sigma_m12 / scale)
                                       : 0.0;
 
-        lumi_scan.push_back({L_ab, sig_D_L, sig_bell_L});
+        lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_bell_L});
     }
 
     return lumi_scan;
@@ -408,6 +432,7 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
         wt.bin_weights.assign(scan_cfg.n_cos_sub, 0.0);
         wt.sdc_cache.reserve(scan_cfg.n_cos_sub);
 
+        double tw_con = 0.0;
         double tw_D = 0.0;
 
         for (int i = 0; i < scan_cfg.n_cos_sub; ++i) {
@@ -421,6 +446,10 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
             wt.bin_weights[i] = std::max(0.0, rate);
             wt.sdc_cache.push_back(sdc);
             wt.total_weight += wt.bin_weights[i];
+
+            const Matrix4cd rho_theory = spinDensityMatrix(sdc);
+            tw_con += wt.bin_weights[i] * getConcurrence(rho_theory);
+
             tw_D += wt.bin_weights[i] * entanglementMarker(sdc);
         }
 
@@ -436,8 +465,11 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
             continue;
         }
 
-        wt.theory_D = tw_D / wt.total_weight;
-        res.theory_D = wt.theory_D;
+        // wt.theory_D = tw_D / wt.total_weight;
+        // res.theory_D = wt.theory_D;
+        res.theory_concurrence =
+            (wt.total_weight > 0.0) ? tw_con / wt.total_weight : 0.0;
+        res.theory_D = (wt.total_weight > 0.0) ? tw_D / wt.total_weight : 0.0;
 
         // Dedicated MC event loop for this sqrt(s_hat) bin only.
         // verbose=false: suppress per-event progress prints across all bins.
@@ -447,6 +479,9 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
                                                 /*verbose=*/false);
         const ReconstructedMC r = reconstructFromMoments(ev);
 
+        res.mc_concurrence = r.mc_concurrence;
+        res.sigma_concurrence = r.sigma_concurrence;
+        res.significance_concurrence = r.significance_concurrence;
         res.mc_D = r.mc_D;
         res.sigma_D = r.sigma_D;
         res.significance_D = r.significance_D;
