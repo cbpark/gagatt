@@ -100,15 +100,19 @@ MCResult runMC(const MCConfig &cfg) {
                                      r.sigma_cij(a, b));
         std::cout << "\n";
     }
-    std::cout << "\n Reconstructed B+ and B- (components: n,r,k)\n";  // NEW
-    std::cout << std::format(
-        " B+_i : ({:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f})\n",
-        r.mc_bp(0), r.sigma_bp(0), r.mc_bp(1), r.sigma_bp(1), r.mc_bp(2),
-        r.sigma_bp(2));
-    std::cout << std::format(
-        " B-_j : ({:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f})\n",
-        r.mc_bm(0), r.sigma_bm(0), r.mc_bm(1), r.sigma_bm(1), r.mc_bm(2),
-        r.sigma_bm(2));
+    std::cout << "\n Reconstructed B_+ (top polarization)\n";
+    for (int a = 0; a < 3; ++a) {
+        std::cout << std::format(
+            " B+_{} : {:+.4f} +/- {:.4f}  (theory: {:+.4f})\n", ax[a],
+            r.mc_bp(a), r.sigma_bp(a), wt.theory_bp(a));
+    }
+
+    std::cout << "\n Reconstructed B_- (anti-top polarization)\n";
+    for (int a = 0; a < 3; ++a) {
+        std::cout << std::format(
+            " B-_{} : {:+.4f} +/- {:.4f}  (theory: {:+.4f})\n", ax[a],
+            r.mc_bm(a), r.sigma_bm(a), wt.theory_bm(a));
+    }
 
     std::cout << std::format(
         "\n Tr[C] (MC)                    : {:+.6f} +/- {:.6f}\n", r.mc_tr_c,
@@ -149,12 +153,14 @@ MCResult runMC(const MCConfig &cfg) {
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = ev.n_accepted;
-    res.mc_cij = r.mc_cij;
-    res.sigma_cij = r.sigma_cij;
     res.mc_bp = r.mc_bp;
     res.sigma_bp = r.sigma_bp;
     res.mc_bm = r.mc_bm;
     res.sigma_bm = r.sigma_bm;
+    res.theory_bp = wt.theory_bp;
+    res.theory_bm = wt.theory_bm;
+    res.mc_cij = r.mc_cij;
+    res.sigma_cij = r.sigma_cij;
     res.mc_tr_c = r.mc_tr_c;
     res.sigma_tr_c = r.sigma_tr_c;
     res.mc_D = r.mc_D;

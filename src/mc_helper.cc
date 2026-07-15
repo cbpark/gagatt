@@ -78,6 +78,8 @@ WeightTable buildWeightTable(const MCConfig &cfg,
 
     double tw_neg = 0.0, tw_con = 0.0, tw_trc = 0.0, tw_m12 = 0.0;
     double tw_D = 0.0;  // sum w * entanglementMarker(sdc)
+    Eigen::Vector3d tw_bp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d tw_bm = Eigen::Vector3d::Zero();
 
     std::cout << "-- building weight table ...\n";
     for (int i = 0; i < cfg.n_cos; ++i) {
@@ -101,6 +103,8 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             tw_trc += wt.bin_weights[idx] * sdc.cc.trace();
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
+            tw_bp += wt.bin_weights[idx] * sdc.bp;
+            tw_bm += wt.bin_weights[idx] * sdc.bm;
         }
         if ((i + 1) % 20 == 0) {
             std::cout << std::format(" weight table: {}/{}\n", i + 1,
@@ -119,6 +123,8 @@ WeightTable buildWeightTable(const MCConfig &cfg,
     wt.theory_negativity = tw_neg / wt.total_weight;
     wt.theory_concurrence = tw_con / wt.total_weight;
     wt.theory_m12 = tw_m12 / wt.total_weight;
+    wt.theory_bp = tw_bp / wt.total_weight;
+    wt.theory_bm = tw_bm / wt.total_weight;
 
     return wt;
 }
@@ -196,14 +202,16 @@ EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
         // Sample q+ and q- from the joint distribution
         const auto [qp, qm] = sampleDecayAngles(sdc, rng);
 
-        // Accumulate outer product and its element-wise square
-        const Eigen::Matrix3d outer = qp * qm.transpose();
-        ev.S1_qpqm += outer;
-        ev.S2_qpqm += outer.cwiseProduct(outer);
+        // Accumulate first moments (for B_+, B_-)
         ev.S1_qp += qp;
         ev.S2_qp += qp.cwiseProduct(qp);
         ev.S1_qm += qm;
         ev.S2_qm += qm.cwiseProduct(qm);
+
+        // Accumulate outer product and its element-wise square (for C_ij)
+        const Eigen::Matrix3d outer = qp * qm.transpose();
+        ev.S1_qpqm += outer;
+        ev.S2_qpqm += outer.cwiseProduct(outer);
 
         ++ev.n_accepted;
         if (ev.n_accepted % print_every == 0) {
@@ -218,15 +226,36 @@ EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
 // reconstructFromMoments:
 //
 // After N events:
-//   <qi qj>          = S_ij / N
-//   C_ij^MC          = -9 * S_ij / N
-//   Var[<qi qj>]     = (S2_ij/N - (S_ij/N)^2) / N
-//   sigma[C_ij]      = 9 * sqrt(Var[<qi qj>])
+//   <q+_i>  = S1_qp/N,   B_{+i} = 3 <q+_i>
+//   <q-_j>  = S1_qm/N,   B_{-j} = -3 <q-_j>
+//   <qi qj> = S1_qpqm/N, C_ij   = -9 <q+_i q-_j>
+//
+//   Var[<q+_i>]   = (S2_qp/N - <q+_i>^2) / N,  sigma[B_+i] = 3 sqrt(Var)
+//   Var[<q-_j>]   = (S2_qm/N - <q-_j>^2) / N,  sigma[B_-j] = 3 sqrt(Var)
+//   Var[<qi qj>]  = (S2_qpqm/N - <qi qj>^2)/N, sigma[C_ij] = 9 sqrt(Var)
 // -----------------------------------------------------------------------
 ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     ReconstructedMC r;
     const double n = static_cast<double>(ev.n_accepted);
 
+    // --- B_+ and B_- ---
+    const Eigen::Vector3d mean_qp = ev.S1_qp / n;
+    const Eigen::Vector3d mean_qp2 = ev.S2_qp / n;
+    const Eigen::Vector3d var_qp =
+        (mean_qp2 - mean_qp.cwiseProduct(mean_qp)) / n;
+
+    r.mc_bp = 3.0 * mean_qp;
+    r.sigma_bp = 3.0 * var_qp.cwiseMax(0.0).cwiseSqrt();
+
+    const Eigen::Vector3d mean_qm = ev.S1_qm / n;
+    const Eigen::Vector3d mean_qm2 = ev.S2_qm / n;
+    const Eigen::Vector3d var_qm =
+        (mean_qm2 - mean_qm.cwiseProduct(mean_qm)) / n;
+
+    r.mc_bm = -3.0 * mean_qm;
+    r.sigma_bm = 3.0 * var_qm.cwiseMax(0.0).cwiseSqrt();
+
+    // --- C_ij ---
     const Eigen::Matrix3d mean_qpqm = ev.S1_qpqm / n;
 
     // C_ij^MC = -9 * <q+_i q-_j>
@@ -238,27 +267,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         (mean_qpqm2 - mean_qpqm.cwiseProduct(mean_qpqm)) / n;
 
     // sigma[C_ij] = 9 * sqrt(Var[<qi qj>])
-    r.sigma_cij = 9.0 * var_mean.cwiseSqrt().cwiseAbs();
-
-    // <q+_i> =  (1/3) B_{+i}  =>  B_+ =  3 <q+>
-    const Eigen::Vector3d mean_qp = ev.S1_qp / n;
-    const Eigen::Vector3d mean_qp2 = ev.S2_qp / n;
-    const Eigen::Vector3d var_qp =
-        (mean_qp2 - mean_qp.cwiseProduct(mean_qp)) / n;
-
-    // <q-_j> = -(1/3) B_{-j}  =>  B_- = -3 <q->
-    const Eigen::Vector3d mean_qm = ev.S1_qm / n;
-    const Eigen::Vector3d mean_qm2 = ev.S2_qm / n;
-    const Eigen::Vector3d var_qm =
-        (mean_qm2 - mean_qm.cwiseProduct(mean_qm)) / n;
-
-    r.mc_bp = 3.0 * mean_qp;
-    r.mc_bm = -3.0 * mean_qm;
-
-    // sigma[B_i] = 3 * sqrt(Var[<q_i>]) — sign of the -3 factor doesn't
-    // affect the uncertainty (squared in error propagation).
-    r.sigma_bp = 3.0 * var_qp.cwiseSqrt();
-    r.sigma_bm = 3.0 * var_qm.cwiseSqrt();
+    r.sigma_cij = 9.0 * var_mean.cwiseMax(0.0).cwiseSqrt();
 
     // Tr[C] and its uncertainty:
     // sigma^2[Tr[C]] = 81 * (Var[<nn>] + Var[<rr>] + Var[<kk>])

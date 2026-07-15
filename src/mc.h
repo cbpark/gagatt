@@ -59,15 +59,15 @@ struct LumiScanPoint {
 struct MCResult {
     long long n_events_generated = 0;
 
-    // ----------------------------------------------------------------
-    // Reconstructed C_ij from <q+_i q-_j> = -1/9 C_ij
-    // ----------------------------------------------------------------
-    Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
-    Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
     Eigen::Vector3d mc_bp = Eigen::Vector3d::Zero();
     Eigen::Vector3d sigma_bp = Eigen::Vector3d::Zero();
     Eigen::Vector3d mc_bm = Eigen::Vector3d::Zero();
     Eigen::Vector3d sigma_bm = Eigen::Vector3d::Zero();
+    Eigen::Vector3d theory_bp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d theory_bm = Eigen::Vector3d::Zero();
+
+    Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
+    Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
 
     // Tr[C]. note that D =/= Tr[C] / 3
     double mc_tr_c = 0.0;
