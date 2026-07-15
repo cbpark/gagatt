@@ -200,6 +200,10 @@ EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
         const Eigen::Matrix3d outer = qp * qm.transpose();
         ev.S1_qpqm += outer;
         ev.S2_qpqm += outer.cwiseProduct(outer);
+        ev.S1_qp += qp;
+        ev.S2_qp += qp.cwiseProduct(qp);
+        ev.S1_qm += qm;
+        ev.S2_qm += qm.cwiseProduct(qm);
 
         ++ev.n_accepted;
         if (ev.n_accepted % print_every == 0) {
@@ -236,6 +240,26 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // sigma[C_ij] = 9 * sqrt(Var[<qi qj>])
     r.sigma_cij = 9.0 * var_mean.cwiseSqrt().cwiseAbs();
 
+    // <q+_i> =  (1/3) B_{+i}  =>  B_+ =  3 <q+>
+    const Eigen::Vector3d mean_qp = ev.S1_qp / n;
+    const Eigen::Vector3d mean_qp2 = ev.S2_qp / n;
+    const Eigen::Vector3d var_qp =
+        (mean_qp2 - mean_qp.cwiseProduct(mean_qp)) / n;
+
+    // <q-_j> = -(1/3) B_{-j}  =>  B_- = -3 <q->
+    const Eigen::Vector3d mean_qm = ev.S1_qm / n;
+    const Eigen::Vector3d mean_qm2 = ev.S2_qm / n;
+    const Eigen::Vector3d var_qm =
+        (mean_qm2 - mean_qm.cwiseProduct(mean_qm)) / n;
+
+    r.mc_bp = 3.0 * mean_qp;
+    r.mc_bm = -3.0 * mean_qm;
+
+    // sigma[B_i] = 3 * sqrt(Var[<q_i>]) — sign of the -3 factor doesn't
+    // affect the uncertainty (squared in error propagation).
+    r.sigma_bp = 3.0 * var_qp.cwiseSqrt();
+    r.sigma_bm = 3.0 * var_qm.cwiseSqrt();
+
     // Tr[C] and its uncertainty:
     // sigma^2[Tr[C]] = 81 * (Var[<nn>] + Var[<rr>] + Var[<kk>])
     r.mc_tr_c = r.mc_cij.trace();
@@ -253,8 +277,8 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     r.significance_D =
         (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
-    // Reconstruct density matrix from C_ij^MC (B+ = B- = 0 at LO)
-    const Matrix4cd mc_rho = reconstructRho(r.mc_cij);
+    // Reconstruct density matrix from B+^MC, B-^MC, C_ij^MC
+    const Matrix4cd mc_rho = reconstructRho(r.mc_bp, r.mc_bm, r.mc_cij);
     r.mc_negativity = negativity(mc_rho);
     r.mc_concurrence = getConcurrence(mc_rho);
     r.mc_m12 = m12FromCij(r.mc_cij);

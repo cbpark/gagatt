@@ -116,9 +116,19 @@ inline double entanglementMarker(const SDMatrixCoefficients &sdc) {
     return entanglementMarker(sdc.cc);
 }
 
-// Build 4x4 density matrix from C_ij with B+ = B- = 0 (LO QED).
-// rho = (1/4)(I2xI2 + sum_{i,j} C_ij sigma_i x sigma_j)
-Matrix4cd reconstructRho(const Eigen::Matrix3d &cij);
+// Build the 4x4 spin density matrix from B+, B-, and C_ij directly,
+// using the same convention as spinDensityMatrix():
+//   rho = (1/4)[ I2xI2 + sum_i B+_i (sigma_i x I2)
+//                      + sum_j B-_j (I2 x sigma_j)
+//                      + sum_{ij} C_ij (sigma_i x sigma_j) ]
+Matrix4cd reconstructRho(const Eigen::Vector3d &bp, const Eigen::Vector3d &bm,
+                         const Eigen::Matrix3d &cij);
+// Convenience overload for the B+ = B- = 0 limit (e.g. LO predictions where
+// only C_ij is available/needed).
+inline Matrix4cd reconstructRho(const Eigen::Matrix3d &cij) {
+    return reconstructRho(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                          cij);
+}
 
 // Horodecki parameter m12 = two largest eigenvalues of C * C^T.
 double m12FromCij(const Eigen::Matrix3d &cij);

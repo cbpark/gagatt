@@ -98,6 +98,10 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 struct EventLoopResult {
     Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();  // sum q+_i q-_j
     Eigen::Matrix3d S2_qpqm = Eigen::Matrix3d::Zero();  // sum (q+_i q-_j)^2
+    Eigen::Vector3d S1_qp = Eigen::Vector3d::Zero();    // sum q+_i
+    Eigen::Vector3d S2_qp = Eigen::Vector3d::Zero();    // sum (q+_i)^2
+    Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();    // sum q-_i
+    Eigen::Vector3d S2_qm = Eigen::Vector3d::Zero();    // sum (q-_i)^2
     long long n_accepted = 0;
 };
 
@@ -117,6 +121,12 @@ EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
 struct ReconstructedMC {
     Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
+    // <q+_i> =  (1/3) B_{+i}  =>  B_+ =  3 <q+>
+    Eigen::Vector3d mc_bp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d sigma_bp = Eigen::Vector3d::Zero();
+    // <q-_j> = -(1/3) B_{-j}  =>  B_- = -3 <q->
+    Eigen::Vector3d mc_bm = Eigen::Vector3d::Zero();
+    Eigen::Vector3d sigma_bm = Eigen::Vector3d::Zero();
 
     double mc_tr_c = 0.0;
     double sigma_tr_c = 0.0;

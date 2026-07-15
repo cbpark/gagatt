@@ -171,12 +171,21 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
     return evals(2) + evals(1);
 }
 
-Matrix4cd reconstructRho(const Eigen::Matrix3d &cij) {
+Matrix4cd reconstructRho(const Eigen::Vector3d &bp, const Eigen::Vector3d &bm,
+                         const Eigen::Matrix3d &cij) {
     using namespace Basis;
+
     Matrix4cd rho = I2I2;
+
+    // Vector polarizations
+    rho.noalias() += bp(0) * S1I2 + bp(1) * S2I2 + bp(2) * S3I2;
+    rho.noalias() += bm(0) * I2S1 + bm(1) * I2S2 + bm(2) * I2S3;
+
+    // Spin correlations
     rho.noalias() += cij(0, 0) * S1S1 + cij(0, 1) * S1S2 + cij(0, 2) * S1S3 +
                      cij(1, 0) * S2S1 + cij(1, 1) * S2S2 + cij(1, 2) * S2S3 +
                      cij(2, 0) * S3S1 + cij(2, 1) * S3S2 + cij(2, 2) * S3S3;
+
     return 0.25 * rho;
 }
 

@@ -64,6 +64,10 @@ struct MCResult {
     // ----------------------------------------------------------------
     Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
+    Eigen::Vector3d mc_bp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d sigma_bp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d mc_bm = Eigen::Vector3d::Zero();
+    Eigen::Vector3d sigma_bm = Eigen::Vector3d::Zero();
 
     // Tr[C]. note that D =/= Tr[C] / 3
     double mc_tr_c = 0.0;

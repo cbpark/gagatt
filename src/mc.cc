@@ -100,9 +100,18 @@ MCResult runMC(const MCConfig &cfg) {
                                      r.sigma_cij(a, b));
         std::cout << "\n";
     }
+    std::cout << "\n Reconstructed B+ and B- (components: n,r,k)\n";  // NEW
+    std::cout << std::format(
+        " B+_i : ({:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f})\n",
+        r.mc_bp(0), r.sigma_bp(0), r.mc_bp(1), r.sigma_bp(1), r.mc_bp(2),
+        r.sigma_bp(2));
+    std::cout << std::format(
+        " B-_j : ({:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f}, {:+.4f}+/-{:.4f})\n",
+        r.mc_bm(0), r.sigma_bm(0), r.mc_bm(1), r.sigma_bm(1), r.mc_bm(2),
+        r.sigma_bm(2));
 
     std::cout << std::format(
-        " Tr[C] (MC)                    : {:+.6f} +/- {:.6f}\n", r.mc_tr_c,
+        "\n Tr[C] (MC)                    : {:+.6f} +/- {:.6f}\n", r.mc_tr_c,
         r.sigma_tr_c);
     std::cout << std::format(" Tr[C] (theory)                : {:+.6f}\n",
                              wt.theory_tr_c);
@@ -124,7 +133,8 @@ MCResult runMC(const MCConfig &cfg) {
                              wt.theory_concurrence);
 
     std::cout << std::format(" m12 (MC)             : {:.6f}\n", r.mc_m12);
-    std::cout << std::format(" m12 - 1              : {:.6f}\n", r.mc_m12 - 1.0);
+    std::cout << std::format(" m12 - 1              : {:.6f}\n",
+                             r.mc_m12 - 1.0);
     std::cout << std::format(" sigma_m12 (N_MC)     : {:.6f}\n", r.sigma_m12);
     std::cout << std::format(" sig_Bell at N_MC     : {:.2f} sigma\n",
                              r.significance_bell);
@@ -141,6 +151,10 @@ MCResult runMC(const MCConfig &cfg) {
     res.n_events_generated = ev.n_accepted;
     res.mc_cij = r.mc_cij;
     res.sigma_cij = r.sigma_cij;
+    res.mc_bp = r.mc_bp;
+    res.sigma_bp = r.sigma_bp;
+    res.mc_bm = r.mc_bm;
+    res.sigma_bm = r.sigma_bm;
     res.mc_tr_c = r.mc_tr_c;
     res.sigma_tr_c = r.sigma_tr_c;
     res.mc_D = r.mc_D;
