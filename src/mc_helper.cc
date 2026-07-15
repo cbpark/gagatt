@@ -447,9 +447,7 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
             wt.sdc_cache.push_back(sdc);
             wt.total_weight += wt.bin_weights[i];
 
-            const Matrix4cd rho_theory = spinDensityMatrix(sdc);
-            tw_con += wt.bin_weights[i] * getConcurrence(rho_theory);
-
+            tw_con += wt.bin_weights[i] * getConcurrence(sdc);
             tw_D += wt.bin_weights[i] * entanglementMarker(sdc);
         }
 

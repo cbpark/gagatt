@@ -93,6 +93,10 @@ bool isEntangledByPH(const Matrix4cd &rho);
 double negativity(const Matrix4cd &rho);
 
 double getConcurrence(const Matrix4cd &rho);
+inline double getConcurrence(const SDMatrixCoefficients &sdc) {
+    const Matrix4cd rho = spinDensityMatrix(sdc);
+    return getConcurrence(rho);
+}
 
 inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
     // eigenvalue solvers for 4x4 complex matrices typically accumulate more
