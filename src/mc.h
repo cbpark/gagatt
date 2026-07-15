@@ -52,8 +52,8 @@ struct MCConfig {
 
 struct LumiScanPoint {
     double L_ab;               // luminosity [ab^-1]
-    double significance_D;     // (|D| - 1/3) / sigma_D (0 if D > -1/3)
-    double significance_bell;  // (m12-1) / sigma_m12  (0 if m12 <= 1)
+    double significance_D;     // (-1/3 - D) / sigma_D (0 if D >= -1/3)
+    double significance_bell;  // (m12-1) / sigma_m12 (0 if m12 <= 1)
 };
 
 struct MCResult {
@@ -80,8 +80,9 @@ struct MCResult {
     // Significance of entanglement: (-D - 1/3) / sigma_D when D < -1/3
     double significance_D = 0.0;
 
-    // Quantum-information quantities derived from reconstructed C_ij
-    // (density matrix built with B+ = B- = 0, valid at LO in QED)
+    // Quantum-information quantities derived from the reconstructed rho,
+    // built from B+^MC, B-^MC, and C_ij^MC via reconstructRho()
+    // m12 depends only on C_ij (Horodecki criterion is B-independent).
     double mc_concurrence = 0.0;
     double mc_negativity = 0.0;
     double mc_m12 = 0.0;  // Horodecki m12 = m1 + m2
