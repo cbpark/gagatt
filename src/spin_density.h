@@ -7,6 +7,7 @@
 #endif
 
 #include <Eigen/Core>
+#include <cmath>
 #include <complex>
 #include <unsupported/Eigen/KroneckerProduct>
 
@@ -106,7 +107,21 @@ bool isEntangledByD(const SDMatrixCoefficients &sdc);
 // Horodecki measure (numeric value, not just bool)
 double horodeckiMeasure(const SDMatrixCoefficients &sdc);
 
-double entanglementMarker(const SDMatrixCoefficients &sdc);
+// D = (C_nn - |C_rr + C_kk|) / 3
+// Entangled when D < -1/3
+inline double entanglementMarker(const Eigen::Matrix3d &cij) {
+    return (cij(0, 0) - std::abs(cij(1, 1) + cij(2, 2))) / 3.0;
+}
+inline double entanglementMarker(const SDMatrixCoefficients &sdc) {
+    return entanglementMarker(sdc.cc);
+}
+
+// Build 4x4 density matrix from C_ij with B+ = B- = 0 (LO QED).
+// rho = (1/4)(I2xI2 + sum_{i,j} C_ij sigma_i x sigma_j)
+Matrix4cd reconstructRho(const Eigen::Matrix3d &cij);
+
+// Horodecki parameter m12 = two largest eigenvalues of C * C^T.
+double m12FromCij(const Eigen::Matrix3d &cij);
 }  // namespace gagatt
 
 #endif  // SRC_SPIN_DENSITY_H

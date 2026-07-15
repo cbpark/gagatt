@@ -157,11 +157,9 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
 }
 
 bool isEntangledByD(const SDMatrixCoefficients &sdc) {
-    // double trace_c = sdc.cc.trace();
-    // return std::abs(trace_c) > 1.0 + 1e-15;
+    // Delta_E = C_nn - |C_rr + C_kk|; entangled when Delta_E < -1
     const double delta_E = sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
-    // Using a small epsilon for numerical stability.
-    return delta_E < -1.0 - 1e-15;
+    return delta_E < -1.0 - 1e-15;  // small epsilon for numerical stability
 }
 
 double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
@@ -173,10 +171,21 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
     return evals(2) + evals(1);
 }
 
-double entanglementMarker(const SDMatrixCoefficients &sdc) {
-    // return sdc.cc.trace() / 3.0;
-    // return sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
-    const double delta_e = sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
-    return -delta_e / 3.0;
+Matrix4cd reconstructRho(const Eigen::Matrix3d &cij) {
+    using namespace Basis;
+    Matrix4cd rho = I2I2;
+    rho.noalias() += cij(0, 0) * S1S1 + cij(0, 1) * S1S2 + cij(0, 2) * S1S3 +
+                     cij(1, 0) * S2S1 + cij(1, 1) * S2S2 + cij(1, 2) * S2S3 +
+                     cij(2, 0) * S3S1 + cij(2, 1) * S3S2 + cij(2, 2) * S3S3;
+    return 0.25 * rho;
+}
+
+// Horodecki parameter m12 = two largest eigenvalues of C * C^T.
+double m12FromCij(const Eigen::Matrix3d &cij) {
+    const Eigen::Matrix3d M = cij * cij.transpose();
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
+        M, Eigen::EigenvaluesOnly);
+    const auto ev = solver.eigenvalues();  // ascending order
+    return ev(2) + ev(1);
 }
 }  // namespace gagatt

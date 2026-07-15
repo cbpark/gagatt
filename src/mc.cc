@@ -104,32 +104,6 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 }
 
 // -----------------------------------------------------------------------
-// reconstructRho:
-//   Build 4x4 density matrix from C_ij with B+ = B- = 0 (LO QED).
-//   rho = (1/4)(I2xI2 + sum_{i,j} C_ij sigma_i x sigma_j)
-// -----------------------------------------------------------------------
-Matrix4cd reconstructRho(const Eigen::Matrix3d &cij) {
-    using namespace Basis;
-    Matrix4cd rho = I2I2;
-    rho.noalias() += cij(0, 0) * S1S1 + cij(0, 1) * S1S2 + cij(0, 2) * S1S3 +
-                     cij(1, 0) * S2S1 + cij(1, 1) * S2S2 + cij(1, 2) * S2S3 +
-                     cij(2, 0) * S3S1 + cij(2, 1) * S3S2 + cij(2, 2) * S3S3;
-    return 0.25 * rho;
-}
-
-// -----------------------------------------------------------------------
-// m12FromCij:
-//   Horodecki parameter m12 = two largest eigenvalues of C * C^T.
-// -----------------------------------------------------------------------
-double m12FromCij(const Eigen::Matrix3d &cij) {
-    const Eigen::Matrix3d M = cij * cij.transpose();
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
-        M, Eigen::EigenvaluesOnly);
-    const auto ev = solver.eigenvalues();  // ascending order
-    return ev(2) + ev(1);
-}
-
-// -----------------------------------------------------------------------
 // Main MC runner
 // -----------------------------------------------------------------------
 MCResult runMC(const MCConfig &cfg) {
