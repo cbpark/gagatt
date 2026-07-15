@@ -15,11 +15,12 @@ void printUsage(const char *prog) {
         << "  sqrt_s        : e+e- CM energy [GeV]      (e.g. 500 or 1000)\n"
         << "  pe1           : electron polarization     (e.g. +1.0 or -1.0)\n"
         << "  pe2           : positron polarization     (e.g. +1.0 or -1.0)\n"
-        << "  n_events      : number of MC events       (e.g. 1000000)\n"
+        << "  n_events      : number of MC events       [optional, default "
+           "1000000]\n"
         << "  L_scan_min_ab : scan start [ab^-1]        [optional, default "
-           "0.01]\n"
+           "0.001]\n"
         << "  L_scan_max_ab : scan end   [ab^-1]        [optional, default "
-           "2.0]\n"
+           "1.0]\n"
         << "  n_L_points    : number of luminosity pts  [optional, default "
            "200]\n"
         << "\n"
@@ -30,7 +31,7 @@ void printUsage(const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 5 || argc > 8) {
+    if (argc < 4 || argc > 8) {
         printUsage(argv[0]);
         return EXIT_FAILURE;
     }
@@ -39,13 +40,10 @@ int main(int argc, char *argv[]) {
     cfg.sqrt_s = std::stod(argv[1]);
     cfg.pe1 = std::stod(argv[2]);
     cfg.pe2 = std::stod(argv[3]);
-    cfg.n_events = std::stoll(argv[4]);
-
-    // Luminosity scan parameters (optional)
-    cfg.L_scan_min_ab = (argc >= 6) ? std::stod(argv[5]) : 0.01;
-    cfg.L_scan_max_ab = (argc >= 7) ? std::stod(argv[6]) : 2.0;
-    cfg.n_L_points = (argc >= 8) ? std::stoi(argv[7]) : 200;
-
+    if (argc >= 5) { cfg.n_events = std::stoll(argv[4]); }
+    if (argc >= 6) { cfg.L_scan_min_ab = std::stod(argv[5]); }
+    if (argc >= 7) { cfg.L_scan_max_ab = std::stod(argv[6]); }
+    if (argc >= 8) { cfg.n_L_points = std::stoi(argv[7]); }
     cfg.sqrts_max = cfg.sqrt_s;
 
     const MCResult res = runMC(cfg);

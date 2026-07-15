@@ -45,8 +45,8 @@ struct MCConfig {
     // Luminosity scan for significance plot
     // L_scan_min / L_scan_max  [ab^-1]   (0 disables the scan)
     // ----------------------------------------------------------------
-    double L_scan_min_ab = 0.0;  // [ab^-1]
-    double L_scan_max_ab = 2.0;  // [ab^-1]
+    double L_scan_min_ab = 0.01;  // [ab^-1]
+    double L_scan_max_ab = 2.0;   // [ab^-1]
     int n_L_points = 200;
 };
 
