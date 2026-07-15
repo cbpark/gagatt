@@ -156,8 +156,7 @@ MCResult runMC(const MCConfig &cfg) {
     sdc_cache.reserve(N_bins);
 
     double tw_neg = 0.0, tw_con = 0.0, tw_trc = 0.0, tw_m12 = 0.0;
-    double tw_C11 = 0.0;    // sum w * C_nn
-    double tw_C2233 = 0.0;  // sum w * (C_rr + C_kk)
+    double tw_D = 0.0;  // sum w * entanglementMarker(sdc)
     double total_weight = 0.0;
 
     std::cout << "-- building weight table ...\n";
@@ -180,9 +179,7 @@ MCResult runMC(const MCConfig &cfg) {
             tw_neg += bin_weights[idx] * negativity(rho);
             tw_con += bin_weights[idx] * getConcurrence(rho);
             tw_trc += bin_weights[idx] * sdc.cc.trace();
-            tw_C11 += bin_weights[idx] * sdc.cc(0, 0);  // C_nn
-            tw_C2233 += bin_weights[idx] *
-                        (sdc.cc(1, 1) + sdc.cc(2, 2));  // C_rr + C_kk
+            tw_D += bin_weights[idx] * entanglementMarker(sdc);  // per-bin D
             tw_m12 += bin_weights[idx] * horodeckiMeasure(sdc);
         }
         if ((i + 1) % 20 == 0)
@@ -196,7 +193,7 @@ MCResult runMC(const MCConfig &cfg) {
     }
 
     const double theory_tr_c = tw_trc / total_weight;
-    const double theory_D = (tw_C11 - std::abs(tw_C2233)) / total_weight / 3.0;
+    const double theory_D = tw_D / total_weight;
     const double theory_neg = tw_neg / total_weight;
     const double theory_con = tw_con / total_weight;
     const double theory_m12 = tw_m12 / total_weight;
@@ -291,9 +288,9 @@ MCResult runMC(const MCConfig &cfg) {
                   0.0, var_mean(0, 0) + var_mean(1, 1) + var_mean(2, 2)));
 
     // D = (C_nn - |C_rr + C_kk|) / 3
-    // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3, so sigma_D unchanged:
-    const double D_val =
-        (mc_cij(0, 0) - std::abs(mc_cij(1, 1) + mc_cij(2, 2))) / 3.0;
+    const double D_val = entanglementMarker(mc_cij);
+    // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
+    // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
     const double sigma_D = sigma_tr_c / 3.0;  // same formula, see note below
     const double D_excess =
         -1.0 / 3.0 - D_val;  // positive when D < -1/3 (entangled)
@@ -394,7 +391,6 @@ MCResult runMC(const MCConfig &cfg) {
         std::cout << std::format(
             "\n-- luminosity scan [{:.3f}, {:.3f}] ab^-1, {} points\n",
             cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points);
-        // std::cout << std::format("   N_MC = {:.0f}\n", N_MC);
 
         lumi_scan.reserve(cfg.n_L_points);
 
@@ -410,7 +406,6 @@ MCResult runMC(const MCConfig &cfg) {
 
             const double scale = std::sqrt(N_L / N_MC);
 
-            // const double sig_D_L = significance_D * scale;
             const double sig_D_L =
                 (significance_D > 0.0) ? significance_D * scale : 0.0;
 
@@ -420,14 +415,6 @@ MCResult runMC(const MCConfig &cfg) {
 
             lumi_scan.push_back({L_ab, sig_D_L, sig_bell_L});
         }
-
-        // Print table to stdout
-        // std::cout << std::format(" {:>12s}  {:>16s}  {:>16s}\n", "L[ab^-1]",
-        //                          "sig_D[sigma]", "sig_Bell[sigma]");
-        // for (const auto &pt : lumi_scan) {
-        //     std::cout << std::format(" {:12.6f}  {:16.6f}  {:16.6f}\n", pt.L_ab,
-        //                              pt.significance_D, pt.significance_bell);
-        // }
     }
 
     // ------------------------------------------------------------------
