@@ -52,7 +52,7 @@ struct MCConfig {
 
 struct LumiScanPoint {
     double L_ab;               // luminosity [ab^-1]
-    double significance_D;     // (|D| - 1/3) / sigma_D
+    double significance_D;     // (|D| - 1/3) / sigma_D (0 if D > -1/3)
     double significance_bell;  // (m12-1) / sigma_m12  (0 if m12 <= 1)
 };
 
@@ -65,11 +65,15 @@ struct MCResult {
     Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
 
-    // Tr[C] and the entanglement marker D = Tr[C]/3
+    // Tr[C]. note that D =/= Tr[C] / 3
     double mc_tr_c = 0.0;
     double sigma_tr_c = 0.0;
 
-    // Significance of entanglement: (|D| - 1/3) / sigma_D  when D < -1/3
+    // Entanglement marker: D = (C_nn - |C_rr + C_kk|) / 3
+    double mc_D = 0.0;
+    double sigma_D = 0.0;
+
+    // Significance of entanglement: (-D - 1/3) / sigma_D when D < -1/3
     double significance_D = 0.0;
 
     // Quantum-information quantities derived from reconstructed C_ij
@@ -84,7 +88,8 @@ struct MCResult {
     // ----------------------------------------------------------------
     // Theory predictions (luminosity+phase-space weighted averages)
     // ----------------------------------------------------------------
-    double theory_tr_c = 0.0;
+    double theory_tr_c = 0.0;  // Tr[C]
+    double theory_D = 0.0;     // (C_nn - |C_rr + C_kk|) / 3
     double theory_concurrence = 0.0;
     double theory_negativity = 0.0;
     double theory_m12 = 0.0;

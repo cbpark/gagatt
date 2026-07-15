@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
         ofs << std::format("# pe2       = {:+.2f}\n", cfg.pe2);
         ofs << std::format("# N_MC      = {}\n", res.n_events_generated);
         ofs << std::format("# sigma_tot = {:.6f} fb\n", res.total_xsec_fb);
+        ofs << std::format("# theory D  = {:.6f}\n", res.theory_D);
+        ofs << std::format("# MC D      = {:.6f}\n", res.mc_D);
         ofs << std::format("# theory m12= {:.6f}\n", res.theory_m12);
         ofs << std::format("# MC m12    = {:.6f}\n", res.mc_m12);
         ofs << std::format(
