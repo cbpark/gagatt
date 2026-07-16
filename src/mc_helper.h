@@ -142,9 +142,9 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev);
 // -----------------------------------------------------------------------
 // Luminosity scan
 //
-// Rescales significance_D / significance_m12 (computed at N_MC events)
-// to an arbitrary integrated luminosity L via statistical sqrt(N) scaling.
-// See mc.cc / mc_helper.cc for the full derivation.
+// Rescales significance_concurrence, significance_D, and significance_m12
+// (computed at N_MC events) to an arbitrary integrated luminosity L
+// via statistical sqrt(N) scaling.
 // -----------------------------------------------------------------------
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,

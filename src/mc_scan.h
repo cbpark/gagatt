@@ -54,7 +54,7 @@ struct DScanBinResult {
 // -----------------------------------------------------------------------
 // runDScanVsSqrtS
 //
-// Scans D and concurrence vs sqrt(s_hat) with a fixed cos(Theta) cut
+// Scans concurrence, D, and m12 vs sqrt(s_hat) with a fixed cos(Theta) cut
 // window defined in scan_cfg.  For each sqrt(s_hat) bin:
 //   - evaluates the lumi-weighted theory values at the bin midpoint
 //   - runs a dedicated MC event loop (n_events_per_bin events)

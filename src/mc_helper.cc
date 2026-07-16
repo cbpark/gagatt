@@ -87,7 +87,6 @@ WeightTable buildWeightTable(const MCConfig &cfg,
         for (int j = 0; j < cfg.n_sqrts; ++j) {
             const double sqrt_s_hat = sqrts_min + (j + 0.5) * d_sqrts;
             const SDMatrixCoefficients sdc(sqrt_s_hat, cos_th, zcache[j].lw);
-            const Matrix4cd rho = spinDensityMatrix(sdc);
 
             const double rate =
                 eventRate(sqrt_s_hat, sdc, zcache[j].L_tot, cfg.sqrt_s) *
@@ -98,7 +97,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             wt.sdc_cache.push_back(sdc);
 
             wt.total_weight += wt.bin_weights[idx];
-            tw_con += wt.bin_weights[idx] * getConcurrence(rho);
+            tw_con += wt.bin_weights[idx] * getConcurrence(sdc);
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
             tw_bp += wt.bin_weights[idx] * sdc.bp;
