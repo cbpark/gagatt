@@ -13,8 +13,7 @@ void printUsage(const char *prog) {
         << "usage: " << prog
         << " <sqrt_s> <pe1> <pe2>"
            " [n_events] [L_scan_min_ab] [L_scan_max_ab] [n_L_points]"
-           " [--coscut <val>] [--sqrts_max <val>]\n"
-        << "\n"
+           " [--coscut <val>] [--sqrts_max <val>]\n\n"
         << "  sqrt_s        : e+e- CM energy [GeV] (e.g. 500 or 1000)\n"
         << "  pe1           : electron polarization (e.g. +1.0 or -1.0)\n"
         << "  pe2           : positron polarization (e.g. +1.0 or -1.0)\n"
@@ -38,11 +37,9 @@ void printUsage(const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
-    // ------------------------------------------------------------------
     // Strip --coscut and --sqrts_max from argv first, before positional
     // parsing.  This avoids any getopt confusion with negative numbers
     // such as pe2 = -1.
-    // ------------------------------------------------------------------
     MCConfig cfg;
 
     std::vector<const char *> pos;
@@ -73,9 +70,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // ------------------------------------------------------------------
-    // Positional arguments — identical logic to the original.
-    // ------------------------------------------------------------------
     if (pos.size() < 3 || pos.size() > 7) {
         printUsage(argv[0]);
         return EXIT_FAILURE;
@@ -100,9 +94,7 @@ int main(int argc, char *argv[]) {
 
     const MCResult res = runMC(cfg);
 
-    // ------------------------------------------------------------------
     // Write luminosity scan to a .dat file
-    // ------------------------------------------------------------------
     if (!res.lumi_scan.empty()) {
         std::string fname =
             std::format("significance_sqrts{:.0f}_pe1{:+.0f}_pe2{:+.0f}",
