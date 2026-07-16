@@ -113,10 +113,8 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
 
         // Dedicated MC event loop for this sqrt(s_hat) bin only.
         // verbose=false: suppress per-event progress prints across all bins.
-        MCConfig bin_cfg = cfg;
-        bin_cfg.n_events = scan_cfg.n_events_per_bin;
-        const EventLoopResult ev =
-            runEventLoop(bin_cfg, wt, rng, /*verbose=*/false);
+        const EventLoopResult ev = runEventLoop(cfg, scan_cfg.n_events_per_bin,
+                                                wt, rng, /*verbose=*/false);
         const ReconstructedMC r = reconstructFromMoments(ev);
 
         res.mc_concurrence = r.mc_concurrence;

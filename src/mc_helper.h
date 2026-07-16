@@ -105,8 +105,9 @@ struct EventLoopResult {
 // Runs the MC event loop: draws a (cos_th, sqrt_s_hat) bin proportional to
 // wt.bin_weights, samples decay angles, and accumulates moments.
 // Prints progress to stdout every ~10% of cfg.n_events.
-EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
-                             std::mt19937_64 &rng, bool verbose = false);
+EventLoopResult runEventLoop(const MCConfig &cfg, long long n_events,
+                             const WeightTable &wt, std::mt19937_64 &rng,
+                             bool verbose = false);
 
 // -----------------------------------------------------------------------
 // ReconstructedMC

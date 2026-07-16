@@ -12,7 +12,7 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts) {
     std::vector<ZCacheEntry> zcache(cfg.n_sqrts);
 
-    const int print_every = std::max(1, cfg.n_cos);
+    const int print_every = std::max(1, cfg.n_sqrts / 5);
     std::cout << "-- precomputing lumi cache ...\n";
     for (int j = 0; j < cfg.n_sqrts; ++j) {
         const double sqrt_s_hat = sqrts_min + (j + 0.5) * d_sqrts;
@@ -186,8 +186,9 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 //   S_ij  = sum q+_i * q-_j          (first moment)
 //   S2_ij = sum (q+_i * q-_j)^2      (second moment, for variance)
 // -----------------------------------------------------------------------
-EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
-                             std::mt19937_64 &rng, bool verbose) {
+EventLoopResult runEventLoop(const MCConfig &cfg, long long n_events,
+                             const WeightTable &wt, std::mt19937_64 &rng,
+                             bool verbose) {
     std::discrete_distribution<int> bin_dist(wt.bin_weights.begin(),
                                              wt.bin_weights.end());
 
@@ -291,19 +292,11 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     r.mc_negativity = negativity(mc_rho);
 
     r.mc_concurrence = getConcurrence(mc_rho);
-    // Approximation: C depends only on diagonal C_ij elements. Then,
-    //
-    // C = max(0, A_+, A_-)
-    //
-    // A = 1/2 (|Ckk +- Cnn| - |1 -+ Crr|)
-    //
-    // sigma_C = (1/2) * sqrt(sigma_nn^2 + sigma_rr^2 + sigma_kk^2)
-    // This is exact for diagonal C (B=0) and conservative otherwise.
-    const double s_nn = r.sigma_cij(0, 0);
-    const double s_rr = r.sigma_cij(1, 1);
-    const double s_kk = r.sigma_cij(2, 2);
-    r.sigma_concurrence =
-        0.5 * std::sqrt(s_nn * s_nn + s_rr * s_rr + s_kk * s_kk);
+
+    // NOTE: This uses only diagonal sigma_cij entries because the concurrence
+    // formula is evaluated on the diagonal of C when B = 0. For B != 0 this
+    // is an underestimate; a fully conservative bound would sum all 9 entries:
+    r.sigma_concurrence = 0.5 * r.sigma_cij.norm();
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
             ? r.mc_concurrence / r.sigma_concurrence

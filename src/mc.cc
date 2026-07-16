@@ -50,7 +50,7 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 3/4: event loop (bin sampler is internal to runEventLoop)
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
-    const EventLoopResult ev = runEventLoop(cfg, wt, rng);
+    const EventLoopResult ev = runEventLoop(cfg, cfg.n_events, wt, rng);
 
     // Phase 5: reconstruct C_ij and all derived quantities
     const ReconstructedMC r = reconstructFromMoments(ev);
