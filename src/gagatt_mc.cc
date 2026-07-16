@@ -91,6 +91,12 @@ int main(int argc, char *argv[]) {
 
     // sqrts_max defaults to sqrt_s unless --sqrts_max was given.
     if (cfg.sqrts_max < 0.0) { cfg.sqrts_max = cfg.sqrt_s; }
+    if (cfg.sqrts_max > cfg.sqrt_s) {
+        std::cerr << std::format(
+            "ERROR: --sqrts_max ({:.1f}) cannot exceed sqrt_s ({:.1f})\n",
+            cfg.sqrts_max, cfg.sqrt_s);
+        return EXIT_FAILURE;
+    }
 
     const MCResult res = runMC(cfg);
 
