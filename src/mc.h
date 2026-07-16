@@ -54,7 +54,7 @@ struct LumiScanPoint {
     double L_ab;  // luminosity [ab^-1]
     double significance_concurrence = 0.0;
     double significance_D;     // (-1/3 - D) / sigma_D (0 if D >= -1/3)
-    double significance_bell;  // (m12-1) / sigma_m12 (0 if m12 <= 1)
+    double significance_m12;  // (m12-1) / sigma_m12 (0 if m12 <= 1)
 };
 
 struct MCResult {
@@ -86,7 +86,7 @@ struct MCResult {
     double mc_m12 = 0.0;
     double sigma_m12 = 0.0;
     // Significance of Bell inequality violation: (m12 - 1) / sigma_m12
-    double significance_bell = 0.0;
+    double significance_m12 = 0.0;
 
     // ----------------------------------------------------------------
     // Theory predictions (luminosity+phase-space weighted averages)

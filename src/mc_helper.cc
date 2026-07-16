@@ -298,9 +298,9 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // valid as an order-of-magnitude estimate near the Bell boundary
     // (m12 ~ 1). Exact propagation requires eigenvectors of C*C^T.
     r.sigma_m12 = std::sqrt(2.0 * r.sigma_cij.cwiseProduct(r.sigma_cij).sum());
-    r.significance_bell = (r.sigma_m12 > 0.0 && r.mc_m12 > 1.0)
-                              ? (r.mc_m12 - 1.0) / r.sigma_m12
-                              : 0.0;
+    r.significance_m12 = (r.sigma_m12 > 0.0 && r.mc_m12 > 1.0)
+                             ? (r.mc_m12 - 1.0) / r.sigma_m12
+                             : 0.0;
 
     return r;
 }
@@ -351,8 +351,8 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
         const double scale = std::sqrt(N_L / N_MC);
         const double sig_C_L = r.significance_concurrence * scale;
         const double sig_D_L = r.significance_D * scale;
-        const double sig_bell_L = r.significance_bell * scale;
-        lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_bell_L});
+        const double sig_m12_L = r.significance_m12 * scale;
+        lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_m12_L});
     }
 
     return lumi_scan;

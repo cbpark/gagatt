@@ -132,23 +132,26 @@ int main(int argc, char *argv[]) {
     ofs << std::format("#\n");
     ofs << std::format(
         "# {:>12s} {:>12s} {:>12s}"
-        " {:>12s} {:>12s} {:>12s} {:>12s}"  // theory_C, mc_C, sigma_C, sig_C
-        " {:>12s} {:>12s} {:>12s} {:>12s}"  // theory_D, mc_D, sigma_D, sig_D
+        " {:>12s} {:>12s} {:>12s}"  // theory_C, mc_C, sigma_C
+        " {:>12s} {:>12s} {:>12s}"  // theory_D, mc_D, sigma_D
+        " {:>12s} {:>12s} {:>12s}"  // theory_m12, mc_m12, sigma_m12
         " {:>14s}\n",
         "sqrts_lo", "sqrts_hi", "sqrts_mid", "theory_C", "mc_C", "sigma_C",
-        "sig_C", "theory_D", "mc_D", "sigma_D", "sig_D", "bin_xsec_fb");
+        "theory_D", "mc_D", "sigma_D", "theory_m12", "mc_m12", "sigma_m12",
+        "bin_xsec_fb");
 
     // Data rows
     for (const auto &res : results) {
         ofs << std::format(
             " {:12.4f} {:12.4f} {:12.4f}"
-            " {:12.6f} {:12.6f} {:12.6f} {:12.4f}"
-            " {:12.6f} {:12.6f} {:12.6f} {:12.4f}"
+            " {:12.6f} {:12.6f} {:12.6f}"
+            " {:12.6f} {:12.6f} {:12.6f}"
+            " {:12.6f} {:12.6f} {:12.6f}"
             " {:14.6e}\n",
             res.sqrts_lo, res.sqrts_hi, res.sqrts_mid, res.theory_concurrence,
-            res.mc_concurrence, res.sigma_concurrence,
-            res.significance_concurrence, res.theory_D, res.mc_D, res.sigma_D,
-            res.significance_D, res.bin_xsec_fb);
+            res.mc_concurrence, res.sigma_concurrence, res.theory_D, res.mc_D,
+            res.sigma_D, res.theory_m12, res.mc_m12, res.sigma_m12,
+            res.bin_xsec_fb);
     }
 
     std::cout << std::format("-- wrote {} rows to {}\n", results.size(),

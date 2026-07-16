@@ -133,7 +133,7 @@ struct ReconstructedMC {
 
     double mc_m12 = 0.0;
     double sigma_m12 = 0.0;
-    double significance_bell = 0.0;  // (m12 - 1) / sigma_m12 when m12 > 1
+    double significance_m12 = 0.0;  // (m12 - 1) / sigma_m12 when m12 > 1
 };
 
 // Turns raw event-loop moments into C_ij and all derived quantities.
@@ -142,7 +142,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev);
 // -----------------------------------------------------------------------
 // Luminosity scan
 //
-// Rescales significance_D / significance_bell (computed at N_MC events)
+// Rescales significance_D / significance_m12 (computed at N_MC events)
 // to an arbitrary integrated luminosity L via statistical sqrt(N) scaling.
 // See mc.cc / mc_helper.cc for the full derivation.
 // -----------------------------------------------------------------------

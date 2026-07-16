@@ -36,14 +36,16 @@ struct DScanBinResult {
 
     double theory_concurrence = 0.0;
     double theory_D = 0.0;
+    double theory_m12 = 0.0;
 
     double mc_concurrence = 0.0;
     double sigma_concurrence = 0.0;
-    double significance_concurrence = 0.0;
 
     double mc_D = 0.0;
     double sigma_D = 0.0;
-    double significance_D = 0.0;
+
+    double mc_m12 = 0.0;
+    double sigma_m12 = 0.0;
 
     double bin_xsec_fb = 0.0;  // integrated xsec over cos_th cut window
     long long n_events = 0;

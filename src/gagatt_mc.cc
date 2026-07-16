@@ -80,12 +80,12 @@ int main(int argc, char *argv[]) {
             " * sqrt(sigma_tot[fb] * L[ab^-1] * 1e3 / N_MC)\n");
         ofs << std::format("#\n");
         ofs << std::format("# {:>12s} {:>16s} {:>16s} {:>16s}\n", "L[ab^-1]",
-                           "sig_C[sigma]", "sig_D[sigma]", "sig_Bell[sigma]");
+                           "sig_C[sigma]", "sig_D[sigma]", "sig_m12[sigma]");
 
         for (const auto &pt : res.lumi_scan) {
             ofs << std::format(" {:12.6f} {:16.6f} {:16.6f} {:16.6f}\n",
                                pt.L_ab, pt.significance_concurrence,
-                               pt.significance_D, pt.significance_bell);
+                               pt.significance_D, pt.significance_m12);
         }
 
         std::cout << std::format("\n-- scan written to: {}\n", fname);

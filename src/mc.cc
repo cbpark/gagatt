@@ -111,8 +111,8 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << std::format("\n m12 (MC)         : {:.6f}\n", r.mc_m12);
     std::cout << std::format(" m12 - 1          : {:+.6f}\n", r.mc_m12 - 1.0);
     std::cout << std::format(" sigma_m12 (N_MC) : {:.6f}\n", r.sigma_m12);
-    std::cout << std::format(" sig_Bell at N_MC : {:.2f} sigma\n",
-                             r.significance_bell);
+    std::cout << std::format(" sig_m12 at N_MC : {:.2f} sigma\n",
+                             r.significance_m12);
 
     // Phase 7: luminosity scan
     const std::vector<LumiScanPoint> lumi_scan =
@@ -143,7 +143,7 @@ MCResult runMC(const MCConfig &cfg) {
 
     res.mc_m12 = r.mc_m12;
     res.sigma_m12 = r.sigma_m12;
-    res.significance_bell = r.significance_bell;
+    res.significance_m12 = r.significance_m12;
 
     res.theory_concurrence = wt.theory_concurrence;
     res.theory_D = wt.theory_D;

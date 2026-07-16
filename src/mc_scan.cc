@@ -27,9 +27,7 @@ static WeightTable buildScanSliceWeightTable(
     wt.bin_weights.assign(scan_cfg.n_cos_sub, 0.0);
     wt.sdc_cache.reserve(scan_cfg.n_cos_sub);
 
-    double tw_con = 0.0;
-    double tw_D = 0.0;
-
+    double tw_con = 0.0, tw_D = 0.0, tw_m12 = 0.0;
     for (int i = 0; i < scan_cfg.n_cos_sub; ++i) {
         const double cos_th = scan_cfg.cos_th_min + (i + 0.5) * d_cos_sub;
         const SDMatrixCoefficients sdc(sqrts_mid, cos_th, lw);
@@ -43,11 +41,13 @@ static WeightTable buildScanSliceWeightTable(
 
         tw_con += wt.bin_weights[i] * getConcurrence(sdc);
         tw_D += wt.bin_weights[i] * entanglementMarker(sdc);
+        tw_m12 += wt.bin_weights[i] * horodeckiMeasure(sdc);
     }
 
     if (wt.total_weight > 0.0) {
         wt.theory_concurrence = tw_con / wt.total_weight;
         wt.theory_D = tw_D / wt.total_weight;
+        wt.theory_m12 = tw_m12 / wt.total_weight;
     }
 
     return wt;
@@ -108,6 +108,7 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
 
         res.theory_concurrence = wt.theory_concurrence;
         res.theory_D = wt.theory_D;
+        res.theory_m12 = wt.theory_m12;
 
         // Dedicated MC event loop for this sqrt(s_hat) bin only.
         // verbose=false: suppress per-event progress prints across all bins.
@@ -117,10 +118,13 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
 
         res.mc_concurrence = r.mc_concurrence;
         res.sigma_concurrence = r.sigma_concurrence;
-        res.significance_concurrence = r.significance_concurrence;
+
         res.mc_D = r.mc_D;
         res.sigma_D = r.sigma_D;
-        res.significance_D = r.significance_D;
+
+        res.mc_m12 = r.mc_m12;
+        res.sigma_m12 = r.sigma_m12;
+
         res.n_events = ev.n_accepted;
 
         results.push_back(res);
