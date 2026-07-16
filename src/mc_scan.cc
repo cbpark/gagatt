@@ -12,9 +12,7 @@ namespace gagatt {
 // buildScanSliceWeightTable (internal helper)
 //
 // Builds a WeightTable sub-binned in cos(Theta) over [cos_th_min,
-// cos_th_max] at a fixed sqrts_mid.  Only bin_weights, sdc_cache,
-// total_weight, theory_concurrence, and theory_D are populated; the
-// remaining WeightTable fields stay at their zero defaults.
+// cos_th_max] at a fixed sqrts_mid.
 //
 // The bin weight already absorbs d_sqrts_scan * d_cos_sub so that
 // total_weight equals the integrated cross section [fb] over this slice.
@@ -113,8 +111,8 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
 
         // Dedicated MC event loop for this sqrt(s_hat) bin only.
         // verbose=false: suppress per-event progress prints across all bins.
-        const EventLoopResult ev = runEventLoop(cfg, scan_cfg.n_events_per_bin,
-                                                wt, rng, /*verbose=*/false);
+        const EventLoopResult ev =
+            runEventLoop(scan_cfg.n_events_per_bin, wt, rng, /*verbose=*/false);
         const ReconstructedMC r = reconstructFromMoments(ev);
 
         res.mc_concurrence = r.mc_concurrence;

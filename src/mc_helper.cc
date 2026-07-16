@@ -181,9 +181,8 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 //   S_ij  = sum q+_i * q-_j          (first moment)
 //   S2_ij = sum (q+_i * q-_j)^2      (second moment, for variance)
 // -----------------------------------------------------------------------
-EventLoopResult runEventLoop(const MCConfig &cfg, long long n_events,
-                             const WeightTable &wt, std::mt19937_64 &rng,
-                             bool verbose) {
+EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
+                             std::mt19937_64 &rng, bool verbose) {
     std::discrete_distribution<int> bin_dist(wt.bin_weights.begin(),
                                              wt.bin_weights.end());
 
@@ -211,7 +210,7 @@ EventLoopResult runEventLoop(const MCConfig &cfg, long long n_events,
         ++ev.n_accepted;
         if (verbose && ev.n_accepted % print_every == 0) {
             std::cout << std::format(" events: {}/{}\n", ev.n_accepted,
-                                     cfg.n_events);
+                                     n_events);
         }
     }
     return ev;

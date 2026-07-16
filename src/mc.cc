@@ -50,7 +50,7 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 3/4: event loop (bin sampler is internal to runEventLoop)
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
-    const EventLoopResult ev = runEventLoop(cfg, cfg.n_events, wt, rng);
+    const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
 
     // Phase 5: reconstruct C_ij and all derived quantities
     const ReconstructedMC r = reconstructFromMoments(ev);
@@ -109,7 +109,7 @@ MCResult runMC(const MCConfig &cfg) {
                              r.significance_D);
 
     std::cout << std::format("\n m12 (MC)         : {:.6f}\n", r.mc_m12);
-    std::cout << std::format(" m12 - 1          : {:.6f}\n", r.mc_m12 - 1.0);
+    std::cout << std::format(" m12 - 1          : {:+.6f}\n", r.mc_m12 - 1.0);
     std::cout << std::format(" sigma_m12 (N_MC) : {:.6f}\n", r.sigma_m12);
     std::cout << std::format(" sig_Bell at N_MC : {:.2f} sigma\n",
                              r.significance_bell);
