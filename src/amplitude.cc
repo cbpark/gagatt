@@ -128,7 +128,6 @@ Amplitude offShellAmpApprox(double sqrt_s_hat, double cos_th, double m1,
 }
 
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th) {
-    KinematicContext k(sqrt_s_hat, cos_th, MTOP, MTOP);
     return summedHelicities([&](Helicity l1, Helicity l2) {
         return polCoeffsForHelicity(sqrt_s_hat, cos_th, l1, l2);
     });

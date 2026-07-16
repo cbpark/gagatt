@@ -71,7 +71,6 @@ struct PolarizationCoefficients {
 };
 
 // Returns the sum (not average) over helicities: hat{C}_i = sum c_i^{l1,l2}
-// This matches Eq.(4.11) with w^{l1,l2} = 1/4 giving factor 4 * 1/4 = 1.
 template <typename F>
 auto summedHelicities(F &&func) {
     using ResultType = std::invoke_result_t<F, Helicity, Helicity>;
@@ -83,23 +82,7 @@ auto summedHelicities(F &&func) {
         }
     }
 
-    // return total * 0.25;
     return total;  // plain sum: hat{C}_i = sum_{l1, l2} c_i^{l1 l2}
-}
-
-// Weighted helicity sum: each (l1, l2) contribution is scaled by w(l1, l2).
-template <typename F, typename W>
-auto weightedHelicities(F &&func, W &&weight) {
-    using ResultType = std::invoke_result_t<F, Helicity, Helicity>;
-    ResultType total{};
-
-    for (auto l1 : {Helicity::PLUS, Helicity::MINUS}) {
-        for (auto l2 : {Helicity::PLUS, Helicity::MINUS}) {
-            total += func(l1, l2) * weight(l1, l2);
-        }
-    }
-
-    return total;
 }
 
 PolarizationCoefficients computePolCoeffs(double sqrt_s_hat, double cos_th);

@@ -53,7 +53,7 @@ struct MCConfig {
 struct LumiScanPoint {
     double L_ab;  // luminosity [ab^-1]
     double significance_concurrence = 0.0;
-    double significance_D;     // (-1/3 - D) / sigma_D (0 if D >= -1/3)
+    double significance_D;    // (-1/3 - D) / sigma_D (0 if D >= -1/3)
     double significance_m12;  // (m12-1) / sigma_m12 (0 if m12 <= 1)
 };
 
@@ -78,7 +78,7 @@ struct MCResult {
     // Entanglement marker: D = (C_nn - |C_rr + C_kk|) / 3
     double mc_D = 0.0;
     double sigma_D = 0.0;
-    // Significance of entanglement: (-D - 1/3) / sigma_D when D < -1/3
+    // Significance of entanglement: (- 1/3 - D) / sigma_D when D < -1/3
     double significance_D = 0.0;
 
     // Horodecki m12 = m1 + m2

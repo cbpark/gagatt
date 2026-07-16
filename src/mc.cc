@@ -94,11 +94,11 @@ MCResult runMC(const MCConfig &cfg) {
     }
 
     std::cout << std::format(
-        "\n Concurrence (MC)          : {:+.6f} +/- {:.6f}\n", r.mc_concurrence,
+        "\n Concurrence (MC,     C(<rho>)) : {:+.6f} +/- {:.6f}\n", r.mc_concurrence,
         r.sigma_concurrence);
-    std::cout << std::format(" Concurrence (theory)      : {:+.6f}\n",
+    std::cout << std::format(" Concurrence (theory, <C(rho)>) : {:+.6f}\n",
                              wt.theory_concurrence);
-    std::cout << std::format(" significance(Concurrence) : {:.2f} sigma\n",
+    std::cout << std::format(" significance(Concurrence)      : {:.2f} sigma\n",
                              r.significance_concurrence);
     std::cout << std::format(
         "\n D=(Cnn-|Crr+Ckk|)/3 (MC)     : {:+.6f} +/- {:.6f}\n", r.mc_D,

@@ -97,6 +97,10 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             wt.sdc_cache.push_back(sdc);
 
             wt.total_weight += wt.bin_weights[idx];
+
+            // theory_concurrence = <C(rho)>, the phase-space average of per-bin
+            // concurrence. Note: this is NOT the same as C(<rho>) computed from
+            // mc_concurrence.
             tw_con += wt.bin_weights[idx] * getConcurrence(sdc);
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
@@ -143,7 +147,7 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
     std::uniform_real_distribution<double> uni_phi(0.0, 2.0 * std::numbers::pi);
     std::uniform_real_distribution<double> uni01(0.0, 1.0);
 
-    // Conservative envelope (Frobenius norm upper-bounds |q+.C.q-|)
+    // Conservative envelope
     const double w_max = 1.0 + sdc.bp.norm() + sdc.bm.norm() + sdc.cc.norm();
 
     for (;;) {
