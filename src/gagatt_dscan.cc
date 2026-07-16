@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include "mc.h"
-#include "mc_helper.h"
+#include "mc_scan.h"
 
 int main(int argc, char *argv[]) {
     // ------------------------------------------------------------------
