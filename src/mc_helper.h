@@ -110,8 +110,8 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
 // ReconstructedMC
 //
 // All MC-side quantities derived from the raw event-loop moments:
-// B_+, B_-, C_ij, their uncertainties, D, Tr[C], reconstructed rho and
-// its entanglement measures, and the Horodecki m12 parameter.
+// B_+, B_-, C_ij, their uncertainties, D, concurrence, and the
+// Horodecki m12 parameter.
 // -----------------------------------------------------------------------
 struct ReconstructedMC {
     Eigen::Vector3d mc_bp = Eigen::Vector3d::Zero();

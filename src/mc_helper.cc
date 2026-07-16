@@ -326,6 +326,7 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
     if (cfg.L_scan_min_ab >= cfg.L_scan_max_ab || cfg.n_L_points <= 1) {
         return lumi_scan;
     }
+    if (sigma_eff_fb <= 0.0) { return lumi_scan; }
 
     const double N_MC = static_cast<double>(n_accepted);
     const double dL = (cfg.L_scan_max_ab - cfg.L_scan_min_ab) /
