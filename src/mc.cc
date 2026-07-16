@@ -48,6 +48,8 @@ MCResult runMC(const MCConfig &cfg) {
 
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
+
+    // Phase 3: event loop
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
 
     // Phase 4: reconstruct C_ij and all derived quantities
