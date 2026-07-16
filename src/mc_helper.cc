@@ -12,6 +12,7 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts) {
     std::vector<ZCacheEntry> zcache(cfg.n_sqrts);
 
+    const int print_every = std::max(1, cfg.n_cos);
     std::cout << "-- precomputing lumi cache ...\n";
     for (int j = 0; j < cfg.n_sqrts; ++j) {
         const double sqrt_s_hat = sqrts_min + (j + 0.5) * d_sqrts;
@@ -19,9 +20,11 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
         const auto [lw, L_tot] =
             lumiWeightsAndTotal(z, cfg.x, cfg.pe1, pc1, cfg.pe2, pc2);
         zcache[j] = {lw, L_tot};
-        if ((j + 1) % 500 == 0)
+
+        if ((j + 1) % print_every == 0) {
             std::cout << std::format(" lumi cache: {}/{}\n", j + 1,
                                      cfg.n_sqrts);
+        }
     }
     return zcache;
 }
@@ -34,8 +37,7 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
 // sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
 // overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
 // -----------------------------------------------------------------------
-double partialXsec(double sqrt_s_hat, double cos_th,
-                   const SDMatrixCoefficients &sdc) {
+double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
     if (sdc.norm_factor <= 0.0) { return 0.0; }
 
     const double s_hat = sqrt_s_hat * sqrt_s_hat;
@@ -43,8 +45,6 @@ double partialXsec(double sqrt_s_hat, double cos_th,
     if (r >= 1.0) { return 0.0; }
 
     const double beta = std::sqrt(1.0 - r);
-    const double denom = 1.0 - beta * beta * cos_th * cos_th;
-    if (denom <= 0.0) { return 0.0; }
 
     // beta Nc / (32 pi s_hat)
     const double prefac = beta * NC / (32.0 * std::numbers::pi * s_hat);
@@ -60,9 +60,9 @@ double partialXsec(double sqrt_s_hat, double cos_th,
 //   * GEV2_TO_FB
 //   / sqrt_s (Jacobian: dz = d(sqrt_s_hat)/sqrt_s)
 // -----------------------------------------------------------------------
-double eventRate(double sqrt_s_hat, double cos_th,
-                 const SDMatrixCoefficients &sdc, double L_tot, double sqrt_s) {
-    const double xsec = partialXsec(sqrt_s_hat, cos_th, sdc);
+double eventRate(double sqrt_s_hat, const SDMatrixCoefficients &sdc,
+                 double L_tot, double sqrt_s) {
+    const double xsec = partialXsec(sqrt_s_hat, sdc);
     if (xsec <= 0.0 || L_tot <= 0.0) { return 0.0; }
 
     return xsec * L_tot * GEV2_TO_FB / sqrt_s;
@@ -81,6 +81,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
     Eigen::Vector3d tw_bp = Eigen::Vector3d::Zero();
     Eigen::Vector3d tw_bm = Eigen::Vector3d::Zero();
 
+    const int print_every = std::max(1, cfg.n_cos / 5);
     std::cout << "-- building weight table ...\n";
     for (int i = 0; i < cfg.n_cos; ++i) {
         const double cos_th = cfg.cos_th_min + (i + 0.5) * d_cos;
@@ -89,9 +90,9 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             const SDMatrixCoefficients sdc(sqrt_s_hat, cos_th, zcache[j].lw);
             const Matrix4cd rho = spinDensityMatrix(sdc);
 
-            const double rate = eventRate(sqrt_s_hat, cos_th, sdc,
-                                          zcache[j].L_tot, cfg.sqrt_s) *
-                                d_sqrts * d_cos;
+            const double rate =
+                eventRate(sqrt_s_hat, sdc, zcache[j].L_tot, cfg.sqrt_s) *
+                d_sqrts * d_cos;
 
             const int idx = i * cfg.n_sqrts + j;
             wt.bin_weights[idx] = std::max(0.0, rate);
@@ -106,7 +107,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             tw_bp += wt.bin_weights[idx] * sdc.bp;
             tw_bm += wt.bin_weights[idx] * sdc.bm;
         }
-        if ((i + 1) % 20 == 0) {
+        if ((i + 1) % print_every == 0) {
             std::cout << std::format(" weight table: {}/{}\n", i + 1,
                                      cfg.n_cos);
         }
@@ -189,8 +190,6 @@ EventLoopResult runEventLoop(const MCConfig &cfg, const WeightTable &wt,
                              std::mt19937_64 &rng, bool verbose) {
     std::discrete_distribution<int> bin_dist(wt.bin_weights.begin(),
                                              wt.bin_weights.end());
-
-    // std::cout << std::format("-- running {} MC events ...\n", cfg.n_events);
 
     EventLoopResult ev;
     const long long print_every = std::max(1LL, cfg.n_events / 10);
@@ -342,9 +341,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
                                            long long n_accepted,
-                                           double significance_concurrence,
-                                           double significance_D, double mc_m12,
-                                           double sigma_m12) {
+                                           const ReconstructedMC &r) {
     std::vector<LumiScanPoint> lumi_scan;
     if (!(cfg.L_scan_min_ab < cfg.L_scan_max_ab) || cfg.n_L_points <= 1) {
         return lumi_scan;
@@ -371,15 +368,15 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
 
         const double scale = std::sqrt(N_L / N_MC);
 
-        const double sig_C_L = (significance_concurrence > 0.0)
-                                   ? significance_concurrence * scale
+        const double sig_C_L = (r.significance_concurrence > 0.0)
+                                   ? r.significance_concurrence * scale
                                    : 0.0;
 
         const double sig_D_L =
-            (significance_D > 0.0) ? significance_D * scale : 0.0;
+            (r.significance_D > 0.0) ? r.significance_D * scale : 0.0;
 
-        const double sig_bell_L = (mc_m12 > 1.0 && sigma_m12 > 0.0)
-                                      ? (mc_m12 - 1.0) / (sigma_m12 / scale)
+        const double sig_bell_L = (r.mc_m12 > 1.0 && r.sigma_m12 > 0.0)
+                                      ? (r.mc_m12 - 1.0) / (r.sigma_m12 / scale)
                                       : 0.0;
 
         lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_bell_L});

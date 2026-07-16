@@ -36,9 +36,8 @@ static WeightTable buildScanSliceWeightTable(
         const double cos_th = scan_cfg.cos_th_min + (i + 0.5) * d_cos_sub;
         const SDMatrixCoefficients sdc(sqrts_mid, cos_th, lw);
 
-        const double rate =
-            eventRate(sqrts_mid, cos_th, sdc, L_tot, cfg.sqrt_s) *
-            d_sqrts_scan * d_cos_sub;
+        const double rate = eventRate(sqrts_mid, sdc, L_tot, cfg.sqrt_s) *
+                            d_sqrts_scan * d_cos_sub;
 
         wt.bin_weights[i] = std::max(0.0, rate);
         wt.sdc_cache.push_back(sdc);

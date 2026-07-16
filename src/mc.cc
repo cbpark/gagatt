@@ -115,9 +115,8 @@ MCResult runMC(const MCConfig &cfg) {
                              r.significance_bell);
 
     // Phase 7: luminosity scan
-    const std::vector<LumiScanPoint> lumi_scan = computeLumiScan(
-        cfg, sigma_eff_fb, ev.n_accepted, r.significance_concurrence,
-        r.significance_D, r.mc_m12, r.sigma_m12);
+    const std::vector<LumiScanPoint> lumi_scan =
+        computeLumiScan(cfg, sigma_eff_fb, ev.n_accepted, r);
 
     // ------------------------------------------------------------------
     // Phase 8: fill and return MCResult

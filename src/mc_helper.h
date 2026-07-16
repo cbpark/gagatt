@@ -38,17 +38,13 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts);
 
 // -----------------------------------------------------------------------
-// partialXsec / eventRate
+// eventRate
 //
-// d sigma_hat / d cos_th (helicity-summed, luminosity-weighted) and the
 // differential event rate d^2 sigma / (d sqrt_s_hat d cos_th) [fb/GeV].
 // See mc_helper.cc for the full derivation/unit bookkeeping.
 // -----------------------------------------------------------------------
-double partialXsec(double sqrt_s_hat, double cos_th,
-                   const SDMatrixCoefficients &sdc);
-
-double eventRate(double sqrt_s_hat, double cos_th,
-                 const SDMatrixCoefficients &sdc, double L_tot, double sqrt_s);
+double eventRate(double sqrt_s_hat, const SDMatrixCoefficients &sdc,
+                 double L_tot, double sqrt_s);
 
 // -----------------------------------------------------------------------
 // WeightTable
@@ -159,9 +155,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev);
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
                                            long long n_accepted,
-                                           double significance_concurrence,
-                                           double significance_D, double mc_m12,
-                                           double sigma_m12);
+                                           const ReconstructedMC &r);
 }  // namespace gagatt
 
 #endif  // SRC_MC_HELPER_H
