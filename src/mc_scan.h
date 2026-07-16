@@ -1,7 +1,7 @@
 #ifndef SRC_MC_SCAN_H
 #define SRC_MC_SCAN_H
 
-#include <cstdint>  // unit64_t
+#include <cstdint>  // uint64_t
 #include <vector>
 #include "mc.h"
 #include "mc_helper.h"

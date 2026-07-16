@@ -52,18 +52,17 @@ double eventRate(double sqrt_s_hat, const SDMatrixCoefficients &sdc,
 // Flattened 2-D (cos_th, sqrt_s_hat) weight table plus the cached
 // SDMatrixCoefficients for each bin (so the event loop doesn't need to
 // recompute sdc for the sampled bin), and the luminosity+phase-space
-// weighted theory averages of D, Tr[C], negativity, concurrence, m12.
+// weighted theory averages of concurrence, D,  m12.
 // -----------------------------------------------------------------------
 struct WeightTable {
     std::vector<double> bin_weights;
     std::vector<SDMatrixCoefficients> sdc_cache;
     double total_weight = 0.0;
 
-    double theory_tr_c = 0.0;
-    double theory_D = 0.0;
-    double theory_negativity = 0.0;
     double theory_concurrence = 0.0;
+    double theory_D = 0.0;
     double theory_m12 = 0.0;
+
     Eigen::Vector3d theory_bp = Eigen::Vector3d::Zero();
     Eigen::Vector3d theory_bm = Eigen::Vector3d::Zero();
 };
@@ -125,18 +124,13 @@ struct ReconstructedMC {
     Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
 
-    double mc_tr_c = 0.0;
-    double sigma_tr_c = 0.0;
+    double mc_concurrence = 0.0;
+    double sigma_concurrence = 0.0;
+    double significance_concurrence = 0.0;
 
     double mc_D = 0.0;
     double sigma_D = 0.0;
     double significance_D = 0.0;  // (-1/3 - D) / sigma_D when D < -1/3
-
-    double mc_negativity = 0.0;
-
-    double mc_concurrence = 0.0;
-    double sigma_concurrence = 0.0;
-    double significance_concurrence = 0.0;
 
     double mc_m12 = 0.0;
     double sigma_m12 = 0.0;

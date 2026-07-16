@@ -123,6 +123,7 @@ MCResult runMC(const MCConfig &cfg) {
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = ev.n_accepted;
+
     res.mc_bp = r.mc_bp;
     res.sigma_bp = r.sigma_bp;
     res.mc_bm = r.mc_bm;
@@ -131,20 +132,23 @@ MCResult runMC(const MCConfig &cfg) {
     res.theory_bm = wt.theory_bm;
     res.mc_cij = r.mc_cij;
     res.sigma_cij = r.sigma_cij;
-    res.mc_tr_c = r.mc_tr_c;
-    res.sigma_tr_c = r.sigma_tr_c;
+
     res.mc_D = r.mc_D;
     res.sigma_D = r.sigma_D;
     res.significance_D = r.significance_D;
+
     res.mc_concurrence = r.mc_concurrence;
-    res.mc_negativity = r.mc_negativity;
+    res.sigma_concurrence = r.sigma_concurrence;
+    res.significance_concurrence = r.significance_concurrence;
+
     res.mc_m12 = r.mc_m12;
+    res.sigma_m12 = r.sigma_m12;
     res.significance_bell = r.significance_bell;
-    res.theory_tr_c = wt.theory_tr_c;
-    res.theory_D = wt.theory_D;
+
     res.theory_concurrence = wt.theory_concurrence;
-    res.theory_negativity = wt.theory_negativity;
+    res.theory_D = wt.theory_D;
     res.theory_m12 = wt.theory_m12;
+
     res.total_xsec_fb = wt.total_weight;
     res.lumi_scan = std::move(lumi_scan);
     return res;

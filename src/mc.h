@@ -70,34 +70,29 @@ struct MCResult {
     Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
 
-    // Tr[C]. note that D =/= Tr[C] / 3
-    double mc_tr_c = 0.0;
-    double sigma_tr_c = 0.0;
+    // Concurrence
+    double mc_concurrence = 0.0;
+    double sigma_concurrence = 0.0;
+    double significance_concurrence = 0.0;
 
     // Entanglement marker: D = (C_nn - |C_rr + C_kk|) / 3
     double mc_D = 0.0;
     double sigma_D = 0.0;
-
     // Significance of entanglement: (-D - 1/3) / sigma_D when D < -1/3
     double significance_D = 0.0;
 
-    // Quantum-information quantities derived from the reconstructed rho,
-    // built from B+^MC, B-^MC, and C_ij^MC via reconstructRho()
+    // Horodecki m12 = m1 + m2
     // m12 depends only on C_ij (Horodecki criterion is B-independent).
-    double mc_concurrence = 0.0;
-    double mc_negativity = 0.0;
-    double mc_m12 = 0.0;  // Horodecki m12 = m1 + m2
-
+    double mc_m12 = 0.0;
+    double sigma_m12 = 0.0;
     // Significance of Bell inequality violation: (m12 - 1) / sigma_m12
     double significance_bell = 0.0;
 
     // ----------------------------------------------------------------
     // Theory predictions (luminosity+phase-space weighted averages)
     // ----------------------------------------------------------------
-    double theory_tr_c = 0.0;  // Tr[C]
-    double theory_D = 0.0;     // (C_nn - |C_rr + C_kk|) / 3
+    double theory_D = 0.0;
     double theory_concurrence = 0.0;
-    double theory_negativity = 0.0;
     double theory_m12 = 0.0;
 
     // Total cross section
@@ -108,7 +103,6 @@ struct MCResult {
 };
 
 // Run the MC simulation and return aggregated results.
-// Prints progress to stdout.
 MCResult runMC(const MCConfig &cfg);
 
 }  // namespace gagatt

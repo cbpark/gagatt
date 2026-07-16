@@ -76,8 +76,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
     wt.bin_weights.assign(N_bins, 0.0);
     wt.sdc_cache.reserve(N_bins);
 
-    double tw_neg = 0.0, tw_con = 0.0, tw_trc = 0.0, tw_m12 = 0.0;
-    double tw_D = 0.0;  // sum w * entanglementMarker(sdc)
+    double tw_con = 0.0, tw_D = 0.0, tw_m12 = 0.0;
     Eigen::Vector3d tw_bp = Eigen::Vector3d::Zero();
     Eigen::Vector3d tw_bm = Eigen::Vector3d::Zero();
 
@@ -99,9 +98,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             wt.sdc_cache.push_back(sdc);
 
             wt.total_weight += wt.bin_weights[idx];
-            tw_neg += wt.bin_weights[idx] * negativity(rho);
             tw_con += wt.bin_weights[idx] * getConcurrence(rho);
-            tw_trc += wt.bin_weights[idx] * sdc.cc.trace();
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
             tw_bp += wt.bin_weights[idx] * sdc.bp;
@@ -119,10 +116,8 @@ WeightTable buildWeightTable(const MCConfig &cfg,
         return wt;
     }
 
-    wt.theory_tr_c = tw_trc / wt.total_weight;
-    wt.theory_D = tw_D / wt.total_weight;
-    wt.theory_negativity = tw_neg / wt.total_weight;
     wt.theory_concurrence = tw_con / wt.total_weight;
+    wt.theory_D = tw_D / wt.total_weight;
     wt.theory_m12 = tw_m12 / wt.total_weight;
     wt.theory_bp = tw_bp / wt.total_weight;
     wt.theory_bm = tw_bm / wt.total_weight;
@@ -193,9 +188,9 @@ EventLoopResult runEventLoop(const MCConfig &cfg, long long n_events,
                                              wt.bin_weights.end());
 
     EventLoopResult ev;
-    const long long print_every = std::max(1LL, cfg.n_events / 10);
+    const long long print_every = std::max(1LL, n_events / 10);
 
-    while (ev.n_accepted < cfg.n_events) {
+    while (ev.n_accepted < n_events) {
         const int k = bin_dist(rng);
         const SDMatrixCoefficients &sdc = wt.sdc_cache[k];
 
@@ -269,38 +264,33 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // sigma[C_ij] = 9 * sqrt(Var[<qi qj>])
     r.sigma_cij = 9.0 * var_mean.cwiseMax(0.0).cwiseSqrt();
 
-    // Tr[C] and its uncertainty:
-    // sigma^2[Tr[C]] = 81 * (Var[<nn>] + Var[<rr>] + Var[<kk>])
-    r.mc_tr_c = r.mc_cij.trace();
-    r.sigma_tr_c =
-        9.0 * std::sqrt(std::max(
-                  0.0, var_mean(0, 0) + var_mean(1, 1) + var_mean(2, 2)));
-
-    // D = (C_nn - |C_rr + C_kk|) / 3
-    r.mc_D = entanglementMarker(r.mc_cij);
-    // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
-    // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
-    r.sigma_D = r.sigma_tr_c / 3.0;
-    const double D_excess =
-        -1.0 / 3.0 - r.mc_D;  // positive when D < -1/3 (entangled)
-    r.significance_D =
-        (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
-
     // Reconstruct density matrix from B+^MC, B-^MC, C_ij^MC
     const Matrix4cd mc_rho = reconstructRho(r.mc_bp, r.mc_bm, r.mc_cij);
-
-    r.mc_negativity = negativity(mc_rho);
-
     r.mc_concurrence = getConcurrence(mc_rho);
-
-    // NOTE: This uses only diagonal sigma_cij entries because the concurrence
-    // formula is evaluated on the diagonal of C when B = 0. For B != 0 this
-    // is an underestimate; a fully conservative bound would sum all 9 entries:
+    // sigma_concurrence = (1/2) ||sigma_cij||_F
+    // Uses all 9 elements of sigma_cij (Frobenius norm), which is conservative
+    // for any C regardless of whether off-diagonal elements are active.
+    // Exact propagation through the concurrence formula would require
+    // eigenvectors of C*C^T; this bound is sufficient for significance
+    // estimates.
     r.sigma_concurrence = 0.5 * r.sigma_cij.norm();
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
             ? r.mc_concurrence / r.sigma_concurrence
             : 0.0;
+
+    // D = (C_nn - |C_rr + C_kk|) / 3
+    r.mc_D = entanglementMarker(r.mc_cij);
+    // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
+    // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
+    const double sigma_tr_c =
+        9.0 * std::sqrt(std::max(
+                  0.0, var_mean(0, 0) + var_mean(1, 1) + var_mean(2, 2)));
+    r.sigma_D = sigma_tr_c / 3.0;
+    const double D_excess =
+        -1.0 / 3.0 - r.mc_D;  // positive when D < -1/3 (entangled)
+    r.significance_D =
+        (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
     r.mc_m12 = m12FromCij(r.mc_cij);
     // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
@@ -360,18 +350,9 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
         }
 
         const double scale = std::sqrt(N_L / N_MC);
-
-        const double sig_C_L = (r.significance_concurrence > 0.0)
-                                   ? r.significance_concurrence * scale
-                                   : 0.0;
-
-        const double sig_D_L =
-            (r.significance_D > 0.0) ? r.significance_D * scale : 0.0;
-
-        const double sig_bell_L = (r.mc_m12 > 1.0 && r.sigma_m12 > 0.0)
-                                      ? (r.mc_m12 - 1.0) / (r.sigma_m12 / scale)
-                                      : 0.0;
-
+        const double sig_C_L = r.significance_concurrence * scale;
+        const double sig_D_L = r.significance_D * scale;
+        const double sig_bell_L = r.significance_bell * scale;
         lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_bell_L});
     }
 
