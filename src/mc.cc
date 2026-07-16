@@ -46,7 +46,7 @@ MCResult runMC(const MCConfig &cfg) {
         buildWeightTable(cfg, zcache, sqrts_min, d_sqrts, d_cos);
     if (wt.bin_weights.empty()) { return {}; }
 
-    // Phase 3: event loop (bin sampler is internal to runEventLoop)
+    // Phase 3: event loop
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);

@@ -295,7 +295,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
     // valid as an order-of-magnitude estimate near the Bell boundary
     // (m12 ~ 1). Exact propagation requires eigenvectors of C*C^T.
-    r.sigma_m12 = std::sqrt(2.0 * r.sigma_cij.cwiseProduct(r.sigma_cij).sum());
+    r.sigma_m12 = std::sqrt(2.0 * r.sigma_cij.squaredNorm());
     r.significance_m12 = (r.sigma_m12 > 0.0 && r.mc_m12 > 1.0)
                              ? (r.mc_m12 - 1.0) / r.sigma_m12
                              : 0.0;

@@ -58,7 +58,7 @@ struct DScanBinResult {
 // window defined in scan_cfg.  For each sqrt(s_hat) bin:
 //   - evaluates the lumi-weighted theory values at the bin midpoint
 //   - runs a dedicated MC event loop (n_events_per_bin events)
-//   - collects DScanBinResult (theory/MC values + significance)
+//   - collects DScanBinResult (theory/MC values and uncertainties)
 //
 // Sub-binning in cos(Theta) uses scan_cfg.n_cos_sub bins over
 // [cos_th_min, cos_th_max].  A single lumi evaluation at the bin midpoint
