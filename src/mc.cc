@@ -11,12 +11,11 @@ namespace gagatt {
 //
 //   Phase 1: buildLumiCache: z-cache of (LumiWeights, L_tot)
 //   Phase 2: buildWeightTable: 2-D weight table + theory averages
-//   Phase 3: (bin sampler is internal to runEventLoop)
-//   Phase 4: runEventLoop: accept/reject sampling of (q+, q-)
-//   Phase 5: reconstructFromMoments: C_ij^MC and derived quantities
-//   Phase 6: print results
-//   Phase 7: computeLumiScan: significance vs. integrated luminosity
-//   Phase 8: fill and return MCResult
+//   Phase 3: runEventLoop: accept/reject sampling of (q+, q-)
+//   Phase 4: reconstructFromMoments: C_ij^MC and derived quantities
+//   Phase 5: print results
+//   Phase 6: computeLumiScan: significance vs. integrated luminosity
+//   Phase 7: fill and return MCResult
 // -----------------------------------------------------------------------
 MCResult runMC(const MCConfig &cfg) {
     const double sqrts_max = (cfg.sqrts_max > 0.0) ? cfg.sqrts_max : cfg.sqrt_s;
@@ -47,16 +46,16 @@ MCResult runMC(const MCConfig &cfg) {
         buildWeightTable(cfg, zcache, sqrts_min, d_sqrts, d_cos);
     if (wt.bin_weights.empty()) { return {}; }
 
-    // Phase 3/4: event loop (bin sampler is internal to runEventLoop)
+    // Phase 3: event loop (bin sampler is internal to runEventLoop)
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
 
-    // Phase 5: reconstruct C_ij and all derived quantities
+    // Phase 4: reconstruct C_ij and all derived quantities
     const ReconstructedMC r = reconstructFromMoments(ev);
 
     // ------------------------------------------------------------------
-    // Phase 6: print results
+    // Phase 5: print results
     // ------------------------------------------------------------------
     std::cout << "\n-- MC results --\n";
     std::cout << std::format(" N events generated            : {}\n",
@@ -114,12 +113,12 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << std::format(" sig_m12 at N_MC : {:.2f} sigma\n",
                              r.significance_m12);
 
-    // Phase 7: luminosity scan
+    // Phase 6: luminosity scan
     const std::vector<LumiScanPoint> lumi_scan =
         computeLumiScan(cfg, sigma_eff_fb, ev.n_accepted, r);
 
     // ------------------------------------------------------------------
-    // Phase 8: fill and return MCResult
+    // Phase 7: fill and return MCResult
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = ev.n_accepted;

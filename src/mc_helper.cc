@@ -111,8 +111,7 @@ WeightTable buildWeightTable(const MCConfig &cfg,
 
     if (wt.total_weight <= 0.0) {
         std::cerr << "ERROR: total weight is zero — check kinematics.\n";
-        wt.bin_weights.clear();
-        return wt;
+        return {};
     }
 
     wt.theory_concurrence = tw_con / wt.total_weight;
@@ -324,7 +323,7 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            long long n_accepted,
                                            const ReconstructedMC &r) {
     std::vector<LumiScanPoint> lumi_scan;
-    if (!(cfg.L_scan_min_ab < cfg.L_scan_max_ab) || cfg.n_L_points <= 1) {
+    if (cfg.L_scan_min_ab >= cfg.L_scan_max_ab || cfg.n_L_points <= 1) {
         return lumi_scan;
     }
 

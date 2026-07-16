@@ -17,9 +17,11 @@ namespace gagatt {
 // The bin weight already absorbs d_sqrts_scan * d_cos_sub so that
 // total_weight equals the integrated cross section [fb] over this slice.
 // -----------------------------------------------------------------------
-static WeightTable buildScanSliceWeightTable(
-    double sqrts_mid, double d_sqrts_scan, const DScanConfig &scan_cfg,
-    const LumiWeights &lw, double L_tot, const MCConfig &cfg) {
+static WeightTable buildScanSliceWeightTable(double sqrts_mid,
+                                             double d_sqrts_scan,
+                                             const DScanConfig &scan_cfg,
+                                             const LumiWeights &lw,
+                                             double L_tot, double sqrt_s) {
     const double d_cos_sub = (scan_cfg.cos_th_max - scan_cfg.cos_th_min) /
                              static_cast<double>(scan_cfg.n_cos_sub);
 
@@ -32,8 +34,8 @@ static WeightTable buildScanSliceWeightTable(
         const double cos_th = scan_cfg.cos_th_min + (i + 0.5) * d_cos_sub;
         const SDMatrixCoefficients sdc(sqrts_mid, cos_th, lw);
 
-        const double rate = eventRate(sqrts_mid, sdc, L_tot, cfg.sqrt_s) *
-                            d_sqrts_scan * d_cos_sub;
+        const double rate =
+            eventRate(sqrts_mid, sdc, L_tot, sqrt_s) * d_sqrts_scan * d_cos_sub;
 
         wt.bin_weights[i] = std::max(0.0, rate);
         wt.sdc_cache.push_back(sdc);
@@ -96,7 +98,7 @@ std::vector<DScanBinResult> runDScanVsSqrtS(const MCConfig &cfg,
             lumiWeightsAndTotal(z, cfg.x, cfg.pe1, pc1, cfg.pe2, pc2);
 
         const WeightTable wt = buildScanSliceWeightTable(
-            sqrts_mid, d_sqrts_scan, scan_cfg, lw, L_tot, cfg);
+            sqrts_mid, d_sqrts_scan, scan_cfg, lw, L_tot, cfg.sqrt_s);
 
         res.bin_xsec_fb = wt.total_weight;
 
