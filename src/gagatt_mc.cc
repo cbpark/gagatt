@@ -18,7 +18,7 @@ void printUsage(const char *prog) {
         << "  pe1           : electron polarization (e.g. +1.0 or -1.0)\n"
         << "  pe2           : positron polarization (e.g. +1.0 or -1.0)\n"
         << "  n_events      : number of MC events [optional, default "
-           "1000000]\n"
+           "10_000_000]\n"
         << "  L_scan_min_ab : scan start [ab^-1] [optional, default "
            "0.001]\n"
         << "  L_scan_max_ab : scan end   [ab^-1] [optional, default "

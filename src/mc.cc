@@ -94,7 +94,7 @@ MCResult runMC(const MCConfig &cfg) {
     }
 
     std::cout << std::format(
-        "\n Concurrence (MC,     C(<rho>)) : {:+.6f} +/- {:.6f}\n", r.mc_concurrence,
+        "\n Concurrence (MC,     <C(rho)>) : {:+.6f} +/- {:.6f}\n", r.mc_concurrence,
         r.sigma_concurrence);
     std::cout << std::format(" Concurrence (theory, <C(rho)>) : {:+.6f}\n",
                              wt.theory_concurrence);

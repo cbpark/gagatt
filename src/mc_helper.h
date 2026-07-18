@@ -84,6 +84,14 @@ WeightTable buildWeightTable(const MCConfig &cfg,
 std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
     const SDMatrixCoefficients &sdc, std::mt19937_64 &rng);
 
+// Per-bin moment accumulator (one entry per (cos_th, sqrt_s_hat) bin).
+struct BinMoments {
+    Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();
+    Eigen::Vector3d S1_qp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();
+    long long n = 0;
+};
+
 // -----------------------------------------------------------------------
 // EventLoopResult
 //
@@ -99,6 +107,8 @@ struct EventLoopResult {
     Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();  // sum q-_i
     Eigen::Vector3d S2_qm = Eigen::Vector3d::Zero();  // sum (q-_i)^2
     long long n_accepted = 0;
+
+    std::vector<BinMoments> per_bin;
 };
 
 // Runs the MC event loop: draws a (cos_th, sqrt_s_hat) bin proportional to

@@ -15,8 +15,7 @@
 #include "constants.h"
 
 namespace gagatt {
-inline constexpr double X_DEFAULT = 4.8;     // machine parameter x
-inline constexpr double KAPPA_LEPTON = 1.0;  // analyzing power for l+/-
+inline constexpr double X_DEFAULT = 4.8;  // machine parameter x
 
 struct MCConfig {
     // Collider parameters
@@ -32,11 +31,11 @@ struct MCConfig {
     double cos_th_max = +1.0;
 
     // Grid for luminosity-weight z-cache
-    int n_sqrts = 2000;
-    int n_cos = 200;
+    int n_sqrts = 200;
+    int n_cos = 20;
 
     // MC statistics
-    long long n_events = 1'000'000LL;
+    long long n_events = 10'000'000LL;
 
     // RNG seed (0 = random_device)
     uint64_t seed = 42;

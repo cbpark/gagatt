@@ -189,6 +189,7 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
                                              wt.bin_weights.end());
 
     EventLoopResult ev;
+    ev.per_bin.resize(wt.bin_weights.size());
     const long long print_every = std::max(1LL, n_events / 10);
 
     while (ev.n_accepted < n_events) {
@@ -208,6 +209,12 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
         const Eigen::Matrix3d outer = qp * qm.transpose();
         ev.S1_qpqm += outer;
         ev.S2_qpqm += outer.cwiseProduct(outer);
+
+        // per-bin accumulation — k identifies which (cos_th, sqrt_s_hat) bin
+        ev.per_bin[k].S1_qpqm += outer;
+        ev.per_bin[k].S1_qp += qp;
+        ev.per_bin[k].S1_qm += qm;
+        ev.per_bin[k].n += 1;
 
         ++ev.n_accepted;
         if (verbose && ev.n_accepted % print_every == 0) {
@@ -265,15 +272,32 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // sigma[C_ij] = 9 * sqrt(Var[<qi qj>])
     r.sigma_cij = 9.0 * var_mean.cwiseMax(0.0).cwiseSqrt();
 
-    // Reconstruct density matrix from B+^MC, B-^MC, C_ij^MC
-    const Matrix4cd mc_rho = reconstructRho(r.mc_bp, r.mc_bm, r.mc_cij);
-    r.mc_concurrence = getConcurrence(mc_rho);
-    // sigma_concurrence = (1/2) ||sigma_cij||_F
-    // Uses all 9 elements of sigma_cij (Frobenius norm), which is conservative
-    // for any C regardless of whether off-diagonal elements are active.
-    // Exact propagation through the concurrence formula would require
-    // eigenvectors of C*C^T; this bound is sufficient for significance
-    // estimates.
+    // ------------------------------------------------------------------
+    // <C(rho)>: compute concurrence / D / m12 per bin, then average.
+    // This is <C(rho)>, NOT C(<rho>).
+    // ------------------------------------------------------------------
+    double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm = 0.0;
+    for (const auto &bm : ev.per_bin) {
+        if (bm.n < 1) { continue; }
+        const double nk = static_cast<double>(bm.n);
+
+        const Eigen::Matrix3d cij_k = -9.0 * (bm.S1_qpqm / nk);
+        const Eigen::Vector3d bp_k = 3.0 * (bm.S1_qp / nk);
+        const Eigen::Vector3d bm_k = -3.0 * (bm.S1_qm / nk);
+
+        const Matrix4cd rho_k = reconstructRho(bp_k, bm_k, cij_k);
+
+        sum_w += nk;
+        sum_wC += nk * getConcurrence(rho_k);
+        sum_wD += nk * entanglementMarker(cij_k);
+        sum_wm += nk * m12FromCij(cij_k);
+    }
+    std::cout << "here!\n";
+    r.mc_concurrence = (sum_w > 0.0) ? sum_wC / sum_w : 0.0;
+    r.mc_D = (sum_w > 0.0) ? sum_wD / sum_w : 0.0;
+    r.mc_m12 = (sum_w > 0.0) ? sum_wm / sum_w : 0.0;
+
+    // sigma_concurrence: conservative Frobenius bound from global sigma_cij
     r.sigma_concurrence = 0.5 * r.sigma_cij.norm();
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
@@ -281,7 +305,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
             : 0.0;
 
     // D = (C_nn - |C_rr + C_kk|) / 3
-    r.mc_D = entanglementMarker(r.mc_cij);
+    // r.mc_D = entanglementMarker(r.mc_cij);
     // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
     // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
     const double sigma_tr_c =
@@ -293,7 +317,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     r.significance_D =
         (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
-    r.mc_m12 = m12FromCij(r.mc_cij);
+    // r.mc_m12 = m12FromCij(r.mc_cij);
     // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
     //
     // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
