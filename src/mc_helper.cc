@@ -277,13 +277,13 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // This is <C(rho_k)>, NOT C(<rho>).
     // ------------------------------------------------------------------
     double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm = 0.0;
-    for (const auto &bm : ev.per_bin) {
-        if (bm.n < 1) { continue; }
-        const double nk = static_cast<double>(bm.n);
+    for (const auto &bin : ev.per_bin) {
+        if (bin.n < 1) { continue; }
+        const double nk = static_cast<double>(bin.n);
 
-        const Eigen::Matrix3d cij_k = -9.0 * (bm.S1_qpqm / nk);
-        const Eigen::Vector3d bp_k = 3.0 * (bm.S1_qp / nk);
-        const Eigen::Vector3d bm_k = -3.0 * (bm.S1_qm / nk);
+        const Eigen::Matrix3d cij_k = -9.0 * (bin.S1_qpqm / nk);
+        const Eigen::Vector3d bp_k = 3.0 * (bin.S1_qp / nk);
+        const Eigen::Vector3d bm_k = -3.0 * (bin.S1_qm / nk);
 
         if (cij_k.cwiseAbs().maxCoeff() > 1.0 ||
             bp_k.cwiseAbs().maxCoeff() > 1.0 ||
