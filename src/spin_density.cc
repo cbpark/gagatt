@@ -108,6 +108,8 @@ double getConcurrence(const Eigen::Matrix4cd &rho) {
     Matrix4cd R = rho * rho_tilde;
 
     Eigen::ComplexEigenSolver<Matrix4cd> solver(R);
+    assert(solver.info() == Eigen::Success &&
+           "ComplexEigenSolver failed to converge in getConcurrence");
     auto e_vals = solver.eigenvalues();
 
     std::vector<double> lambdas;

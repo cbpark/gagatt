@@ -32,7 +32,7 @@ struct ZCacheEntry {
 };
 
 // Builds the z-cache over n_sqrts bins spanning [sqrts_min, sqrts_max].
-// pc1 = -pe1, pc2 = -pe2 (PePc = -1 convention, see runMC).
+// pc1 = -pe1, pc2 = -pe2.
 std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double pc2, double sqrts_min,
                                         double d_sqrts);
