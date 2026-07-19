@@ -163,12 +163,7 @@ bool isEntangledByD(const SDMatrixCoefficients &sdc) {
 }
 
 double horodeckiMeasure(const SDMatrixCoefficients &sdc) {
-    Eigen::Matrix3d M = sdc.cc * sdc.cc.transpose();
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
-        M, Eigen::EigenvaluesOnly);
-    // eigenvalues in ascending order: e0 <= e1 <= e2
-    auto evals = solver.eigenvalues();
-    return evals(2) + evals(1);
+    return m12FromCij(sdc.cc);
 }
 
 Matrix4cd reconstructRho(const Eigen::Vector3d &bp, const Eigen::Vector3d &bm,

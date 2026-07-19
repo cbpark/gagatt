@@ -59,7 +59,7 @@ struct SDMatrixCoefficients {
     Eigen::Matrix3d cc;
     double norm_factor;
 
-    // uniform 1/4 average.
+    // Construct from kinematics only (uniform 1/4 helicity average).
     SDMatrixCoefficients(double sqrt_s_hat, double cos_th);
 
     // construct from pre-computed PolarizationCoefficients
@@ -99,8 +99,7 @@ inline double getConcurrence(const SDMatrixCoefficients &sdc) {
 }
 
 inline bool isEntangledByConcurrence(const Matrix4cd &rho) {
-    // eigenvalue solvers for 4x4 complex matrices typically accumulate more
-    // numerical noise than 3x3 real symmetric solvers.
+    // Threshold accounts for numerical noise in the ComplexEigenSolver.
     return getConcurrence(rho) > 1e-12;
 }
 

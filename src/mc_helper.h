@@ -97,6 +97,9 @@ struct BinMoments {
 //
 // Raw first/second moments of the outer product q+_i * q-_j, accumulated
 // over n_accepted sampled events.
+//
+// The second moments part of this comment only applies to global sigma
+// computation.
 // -----------------------------------------------------------------------
 struct EventLoopResult {
     Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();  // sum q+_i q-_j
