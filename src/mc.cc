@@ -21,7 +21,7 @@ MCResult runMC(const MCConfig &cfg) {
     const double sqrts_max = (cfg.sqrts_max > 0.0) ? cfg.sqrts_max : cfg.sqrt_s;
     const double sqrts_min = cfg.sqrts_min;  // ~ 2 M_t
 
-    const double pc1 = -cfg.pe1;  // PePc = -1
+    const double pc1 = -cfg.pe1;  // pc = -pe
     const double pc2 = -cfg.pe2;
 
     std::cout << std::format(
