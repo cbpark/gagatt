@@ -132,7 +132,8 @@ bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
 }
 
 bool isEntangledByD(const SDMatrixCoefficients &sdc) {
-    // Delta_E = C_nn - |C_rr + C_kk|; entangled when Delta_E < -1
+    // Delta_E = C_nn - |C_rr + C_kk| = 3*D; entangled
+    // when Delta_E < -1 (i.e. D < -1/3)
     const double delta_E = sdc.c_nn() - std::abs(sdc.c_rr() + sdc.c_kk());
     return delta_E < -1.0 - 1e-15;  // small epsilon for numerical stability
 }
