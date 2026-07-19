@@ -38,6 +38,16 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts);
 
 // -----------------------------------------------------------------------
+// partialXsec:
+// d sigma_hat / d cos_th (helicity-summed, luminosity-weighted)
+// = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
+//
+// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
+// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
+// -----------------------------------------------------------------------
+double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc);
+
+// -----------------------------------------------------------------------
 // eventRate
 //
 // differential event rate d^2 sigma / (d sqrt_s_hat d cos_th) [fb/GeV].
@@ -97,9 +107,8 @@ struct BinMoments {
 //
 // Raw first/second moments of the outer product q+_i * q-_j, accumulated
 // over n_accepted sampled events.
-//
-// The second moments part of this comment only applies to global sigma
-// computation.
+// S2_* fields are used only for global sigma estimation in
+// reconstructFromMoments(); they are not accumulated per-bin.
 // -----------------------------------------------------------------------
 struct EventLoopResult {
     Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();  // sum q+_i q-_j

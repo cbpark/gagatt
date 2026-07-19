@@ -31,11 +31,6 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
 
 // -----------------------------------------------------------------------
 // partialXsec:
-// d sigma_hat / d cos_th (helicity-summed, luminosity-weighted)
-// = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
-//
-// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
-// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
 // -----------------------------------------------------------------------
 double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
     if (sdc.norm_factor <= 0.0) { return 0.0; }
@@ -304,6 +299,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 
     // sigma_concurrence: conservative Frobenius bound from global sigma_cij
     r.sigma_concurrence = 0.5 * r.sigma_cij.norm();
+    // significance of C > 0 (entanglement detection threshold)
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
             ? r.mc_concurrence / r.sigma_concurrence

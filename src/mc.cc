@@ -44,7 +44,7 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 2: weight table + theory averages
     const WeightTable wt =
         buildWeightTable(cfg, zcache, sqrts_min, d_sqrts, d_cos);
-    if (wt.bin_weights.empty()) { return {}; }
+    if (wt.bin_weights.empty()) { return {}; }  // total_weight <= 0
 
     std::mt19937_64 rng(cfg.seed == 0 ? std::random_device{}()
                                       : static_cast<uint64_t>(cfg.seed));

@@ -113,6 +113,7 @@ double horodeckiMeasure(const SDMatrixCoefficients &sdc);
 // D = (C_nn - |C_rr + C_kk|) / 3
 // Entangled when D < -1/3
 inline double entanglementMarker(const Eigen::Matrix3d &cij) {
+    // cij(0,0)=C_nn, cij(1,1)=C_rr, cij(2,2)=C_kk (helicity basis)
     return (cij(0, 0) - std::abs(cij(1, 1) + cij(2, 2))) / 3.0;
 }
 inline double entanglementMarker(const SDMatrixCoefficients &sdc) {
