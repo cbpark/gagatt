@@ -98,9 +98,8 @@ WeightTable buildWeightTable(const MCConfig &cfg,
 
             wt.total_weight += wt.bin_weights[idx];
 
-            // theory_concurrence = <C(rho)>, the phase-space average of per-bin
-            // concurrence. Note: this is NOT the same as C(<rho>) computed from
-            // mc_concurrence.
+            // theory_concurrence = <C(rho)>,
+            // the phase-space average of per-bin concurrence.
             tw_con += wt.bin_weights[idx] * getConcurrence(sdc);
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
@@ -147,7 +146,8 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
     std::uniform_real_distribution<double> uni_phi(0.0, 2.0 * std::numbers::pi);
     std::uniform_real_distribution<double> uni01(0.0, 1.0);
 
-    // Conservative envelope
+    // Frobenius norm >= operator norm,
+    // so this is a valid (conservative) envelope
     const double w_max = 1.0 + sdc.bp.norm() + sdc.bm.norm() + sdc.cc.norm();
 
     for (;;) {
@@ -285,6 +285,12 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         const Eigen::Vector3d bp_k = 3.0 * (bm.S1_qp / nk);
         const Eigen::Vector3d bm_k = -3.0 * (bm.S1_qm / nk);
 
+        if (cij_k.cwiseAbs().maxCoeff() > 1.0 ||
+            bp_k.cwiseAbs().maxCoeff() > 1.0 ||
+            bm_k.cwiseAbs().maxCoeff() > 1.0) {
+            continue;
+        }
+
         const Matrix4cd rho_k = reconstructRho(bp_k, bm_k, cij_k);
 
         sum_w += nk;
@@ -292,7 +298,6 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         sum_wD += nk * entanglementMarker(cij_k);
         sum_wm += nk * m12FromCij(cij_k);
     }
-    std::cout << "here!\n";
     r.mc_concurrence = (sum_w > 0.0) ? sum_wC / sum_w : 0.0;
     r.mc_D = (sum_w > 0.0) ? sum_wD / sum_w : 0.0;
     r.mc_m12 = (sum_w > 0.0) ? sum_wm / sum_w : 0.0;
@@ -304,20 +309,15 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
             ? r.mc_concurrence / r.sigma_concurrence
             : 0.0;
 
-    // D = (C_nn - |C_rr + C_kk|) / 3
-    // r.mc_D = entanglementMarker(r.mc_cij);
     // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
     // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
-    const double sigma_tr_c =
-        9.0 * std::sqrt(std::max(
-                  0.0, var_mean(0, 0) + var_mean(1, 1) + var_mean(2, 2)));
-    r.sigma_D = sigma_tr_c / 3.0;
+    r.sigma_D = 3.0 * std::sqrt(std::max(0.0, var_mean(0, 0) + var_mean(1, 1) +
+                                                  var_mean(2, 2)));
     const double D_excess =
         -1.0 / 3.0 - r.mc_D;  // positive when D < -1/3 (entangled)
     r.significance_D =
         (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
-    // r.mc_m12 = m12FromCij(r.mc_cij);
     // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
     //
     // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
