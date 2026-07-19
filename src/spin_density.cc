@@ -6,10 +6,6 @@
 #include <vector>
 #include "amplitude.h"
 
-#ifdef DEBUG
-#include <iostream>
-#endif
-
 namespace gagatt {
 void normaliseFromPol(const PolarizationCoefficients &pol, Eigen::Vector3d &bp,
                       Eigen::Vector3d &bm, Eigen::Matrix3d &cc,
@@ -130,30 +126,7 @@ double getConcurrence(const Eigen::Matrix4cd &rho) {
 }
 
 bool violatesBellInequality(const SDMatrixCoefficients &sdc) {
-#ifdef DEBUG
-    std::cerr << "\nviolatesBellInequality: Cij =\n" << sdc.cc << '\n';
-#endif
-    Eigen::Matrix3d M = sdc.cc * sdc.cc.transpose();
-#ifdef DEBUG
-    std::cerr << "violatesBellInequality: C C^T =\n" << M << '\n';
-#endif
-
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(
-        M, Eigen::EigenvaluesOnly);
-
-    // Eigenvalues are returned in INCREASING order: e0 <= e1 <= e2
-    auto evals = solver.eigenvalues();
-
-    // Horodecki Condition: sum of the two largest eigenvalues > 1
-    double sum_two_largest = evals(2) + evals(1);
-#ifdef DEBUG
-    std::cout << "violatesBellInequality: eigenvalues =\n" << evals << '\n';
-    std::cout << "violatesBellInequality: sum_two_largest = " << sum_two_largest
-              << '\n';
-#endif
-
-    // Using a small epsilon for numerical stability
-    return sum_two_largest > 1.0 + 1e-15;
+    return m12FromCij(sdc.cc) > 1.0 + 1e-15;
 }
 
 bool isEntangledByD(const SDMatrixCoefficients &sdc) {

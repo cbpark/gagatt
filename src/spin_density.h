@@ -126,8 +126,8 @@ inline double entanglementMarker(const SDMatrixCoefficients &sdc) {
 //                      + sum_{ij} C_ij (sigma_i x sigma_j) ]
 Matrix4cd reconstructRho(const Eigen::Vector3d &bp, const Eigen::Vector3d &bm,
                          const Eigen::Matrix3d &cij);
-// Convenience overload for the B+ = B- = 0 limit (e.g. LO predictions where
-// only C_ij is available/needed).
+// Convenience overload when B+ = B- = 0 (unpolarized beams or when only
+// C_ij is available).
 inline Matrix4cd reconstructRho(const Eigen::Matrix3d &cij) {
     return reconstructRho(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
                           cij);
