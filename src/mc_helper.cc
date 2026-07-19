@@ -310,8 +310,11 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
             ? r.mc_concurrence / r.sigma_concurrence
             : 0.0;
 
-    // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3 regardless of sign of
-    // (C_rr+C_kk), so sigma_D has the same form as sigma_Tr[C]/3.
+    // sigma_D is propagated from the global C_ij variance (var_mean),
+    // not from the per-bin mc_D. This is conservative and consistent
+    // with sigma_cij. |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3
+    // regardless of sign of (C_rr+C_kk), so
+    // sigma_D = 3*sqrt(sum var_mean(i,i)).
     r.sigma_D = 3.0 * std::sqrt(std::max(0.0, var_mean(0, 0) + var_mean(1, 1) +
                                                   var_mean(2, 2)));
     const double D_excess =
