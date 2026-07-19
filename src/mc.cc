@@ -109,6 +109,7 @@ MCResult runMC(const MCConfig &cfg) {
                              r.significance_D);
 
     std::cout << std::format("\n m12 (MC)         : {:.6f}\n", r.mc_m12);
+    std::cout << std::format(" m12 (theory)     : {:.6f}\n", wt.theory_m12);
     std::cout << std::format(" m12 - 1          : {:+.6f}\n", r.mc_m12 - 1.0);
     std::cout << std::format(" sigma_m12 (N_MC) : {:.6f}\n", r.sigma_m12);
     std::cout << std::format(" sig_m12 at N_MC : {:.2f} sigma\n",
@@ -124,6 +125,8 @@ MCResult runMC(const MCConfig &cfg) {
     MCResult res;
     res.n_events_generated = ev.n_accepted;
 
+    // NOTE: if fields are added to ReconstructedMC or WeightTable,
+    // update this copy block accordingly.
     res.mc_bp = r.mc_bp;
     res.sigma_bp = r.sigma_bp;
     res.mc_bm = r.mc_bm;

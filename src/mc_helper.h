@@ -38,16 +38,6 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts);
 
 // -----------------------------------------------------------------------
-// partialXsec:
-// d sigma_hat / d cos_th (helicity-summed, luminosity-weighted)
-// = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
-//
-// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
-// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
-// -----------------------------------------------------------------------
-double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc);
-
-// -----------------------------------------------------------------------
 // eventRate
 //
 // differential event rate d^2 sigma / (d sqrt_s_hat d cos_th) [fb/GeV].
@@ -65,6 +55,8 @@ double eventRate(double sqrt_s_hat, const SDMatrixCoefficients &sdc,
 // weighted theory averages of concurrence, D,  m12.
 // -----------------------------------------------------------------------
 struct WeightTable {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     std::vector<double> bin_weights;
     std::vector<SDMatrixCoefficients> sdc_cache;
     double total_weight = 0.0;

@@ -31,8 +31,13 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
 
 // -----------------------------------------------------------------------
 // partialXsec:
+// d sigma_hat / d cos_th (helicity-summed, luminosity-weighted)
+// = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
+//
+// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
+// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
 // -----------------------------------------------------------------------
-double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
+static double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
     if (sdc.norm_factor <= 0.0) { return 0.0; }
 
     const double s_hat = sqrt_s_hat * sqrt_s_hat;
@@ -268,8 +273,8 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     r.sigma_cij = 9.0 * var_mean.cwiseMax(0.0).cwiseSqrt();
 
     // ------------------------------------------------------------------
-    // <C(rho)>: compute concurrence / D / m12 per bin, then average.
-    // This is <C(rho)>, NOT C(<rho>).
+    // Compute <C(rho_k)>: concurrence / D / m12 per bin, then average.
+    // This is <C(rho_k)>, NOT C(<rho>).
     // ------------------------------------------------------------------
     double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm = 0.0;
     for (const auto &bm : ev.per_bin) {
