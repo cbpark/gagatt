@@ -89,6 +89,7 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 // Per-bin moment accumulator (one entry per (cos_th, sqrt_s_hat) bin).
 struct BinMoments {
     Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();
+    Eigen::Matrix3d S2_qpqm = Eigen::Matrix3d::Zero();
     Eigen::Vector3d S1_qp = Eigen::Vector3d::Zero();
     Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();
     long long n = 0;

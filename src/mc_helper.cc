@@ -205,6 +205,7 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
 
         // per-bin accumulation — k identifies which (cos_th, sqrt_s_hat) bin
         ev.per_bin[k].S1_qpqm += outer;
+        ev.per_bin[k].S2_qpqm += outer.cwiseProduct(outer);
         ev.per_bin[k].S1_qp += qp;
         ev.per_bin[k].S1_qm += qm;
         ev.per_bin[k].n += 1;
@@ -270,6 +271,8 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     // This is <C(rho_k)>, NOT C(<rho>).
     // ------------------------------------------------------------------
     double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm = 0.0;
+    double sum_w2_varC =
+        0.0;  // sum n_k^2 * sigma_C_k^2 (for error propagation)
     for (const auto &bin : ev.per_bin) {
         if (bin.n < 1) { continue; }
         const double nk = static_cast<double>(bin.n);
@@ -290,13 +293,28 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         sum_wC += nk * getConcurrence(rho_k);
         sum_wD += nk * entanglementMarker(cij_k);
         sum_wm += nk * m12FromCij(cij_k);
+
+        // Per-bin sigma_cij: Var[<q+_i q-_j>_k] = (E[x^2] - E[x]^2) / n_k
+        // sigma_cij_k(i,j) = 9 * sqrt(Var[<q+_i q-_j>_k])
+        const Eigen::Matrix3d mean_qpqm_k = bin.S1_qpqm / nk;
+        const Eigen::Matrix3d mean_qpqm2_k = bin.S2_qpqm / nk;
+        const Eigen::Matrix3d var_mean_k =
+            (mean_qpqm2_k - mean_qpqm_k.cwiseProduct(mean_qpqm_k)) / nk;
+        const Eigen::Matrix3d sigma_cij_k =
+            9.0 * var_mean_k.cwiseMax(0.0).cwiseSqrt();
+        // Conservative per-bin sigma_concurrence
+        const double sigma_con_k = 0.5 * sigma_cij_k.norm();
+        // Accumulate n_k^2 * sigma_con_k^2 for weighted error propagation
+        sum_w2_varC += nk * nk * sigma_con_k * sigma_con_k;
     }
     r.mc_concurrence = (sum_w > 0.0) ? sum_wC / sum_w : 0.0;
     r.mc_D = (sum_w > 0.0) ? sum_wD / sum_w : 0.0;
     r.mc_m12 = (sum_w > 0.0) ? sum_wm / sum_w : 0.0;
 
-    // sigma_concurrence: conservative Frobenius bound from global sigma_cij
-    r.sigma_concurrence = 0.5 * r.sigma_cij.norm();
+    // sigma_concurrence: per-bin weighted propagation.
+    // mc_concurrence = (1/W) * sum_k n_k * C_k,  W = sum_k n_k
+    // sigma^2 = (1/W)^2 * sum_k n_k^2 * sigma_C_k^2
+    r.sigma_concurrence = (sum_w > 0.0) ? std::sqrt(sum_w2_varC) / sum_w : 0.0;
     // significance of C > 0 (entanglement detection threshold)
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
