@@ -67,11 +67,16 @@ MCResult runMC(const MCConfig &cfg) {
                              sigma_eff_fb);
     std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
 
-    std::cout << std::format("\n Concurrence (MC, N={}): {:.6f} +/- {:.6f}\n",
+    std::cout << std::format("\n Concurrence (theory)  : {:.6f}\n",
+                             wt.theory_concurrence);
+    std::cout << std::format(" Concurrence (MC, N={}): {:.6f} +/- {:.6f}\n",
                              cfg.n_events, r.mc_concurrence,
                              r.sigma_concurrence);
+    std::cout << std::format(" D           (theory)  : {:.6f}\n", wt.theory_D);
     std::cout << std::format(" D           (MC, N={}): {:.6f} +/- {:.6f}\n",
                              cfg.n_events, r.mc_D, r.sigma_D);
+    std::cout << std::format(" m12         (theory)  : {:.6f}\n",
+                             wt.theory_m12);
     std::cout << std::format(" m12         (MC, N={}): {:.6f} +/- {:.6f}\n",
                              cfg.n_events, r.mc_m12, r.sigma_m12);
 

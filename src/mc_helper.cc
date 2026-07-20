@@ -337,8 +337,9 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
         "seeds/point\n",
         cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points, K);
     std::cout << std::format(
-        "   {:>6}  {:>10}  {:>12}  {:>12}  {:>10}  {:>10}  {:>10}\n", "pt",
-        "L[ab^-1]", "N(L)", "C_mean", "sig_C", "sigma_C", "sig_D");
+        "   {:>6}  {:>10}  {:>12}  {:>12}  {:>10}  {:>10}  {:>10}  {:>10}\n",
+        "pt", "L[ab^-1]", "N(L)", "C_mean", "sig_C", "sigma_C", "sig_D",
+        "sig_m12");
 
     lumi_scan.reserve(cfg.n_L_points);
     for (int p = 0; p < cfg.n_L_points; ++p) {
@@ -351,8 +352,8 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
             lumi_scan.push_back({L_ab, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
             std::cout << std::format(
                 "   {:>6}  {:>10.4f}  {:>12.1f}  {:>12}  {:>10}  {:>10}  "
-                "{:>10}\n",
-                p + 1, L_ab, 0.0, "N/A", "N/A", "N/A", "N/A");
+                "{:>10}  {:>10}\n",
+                p + 1, L_ab, 0.0, "N/A", "N/A", "N/A", "N/A", "N/A");
             continue;
         }
 
@@ -391,9 +392,9 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
 
         // progress line: one row per luminosity point
         std::cout << std::format(
-            "   {:>6}  {:>10.4f}  {:>12.1f}  {:>12.6f}  {:>10.4f}  {:>10.6f}  "
-            "{:>10.4f}\n",
-            p + 1, L_ab, N_L, mcon, mC, mscon, mD);
+            "   {:>6}  {:>10.4f}  {:>12.1f}  {:>12.6f}  {:>10.4f}  {:>10.6f}"
+            "  {:>10.4f}  {:>10.4f}\n",
+            p + 1, L_ab, N_L, mcon, mC, mscon, mD, mm12);
 
         lumi_scan.push_back({L_ab, mC, mD, mm12, stddev_of(sig_C, mC),
                              stddev_of(sig_D, mD), stddev_of(sig_m12, mm12)});
