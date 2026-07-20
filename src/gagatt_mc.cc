@@ -127,11 +127,8 @@ int main(int argc, char *argv[]) {
         ofs << std::format("# N_MC   = {}\n", res.n_events_generated);
         ofs << std::format("# sigma_tot      = {:.6f} fb\n", res.total_xsec_fb);
         ofs << std::format("# theory C  = {:.6f}\n", res.theory_concurrence);
-        ofs << std::format("# MC C      = {:.6f}\n", res.mc_concurrence);
         ofs << std::format("# theory D  = {:.6f}\n", res.theory_D);
-        ofs << std::format("# MC D      = {:.6f}\n", res.mc_D);
         ofs << std::format("# theory m12= {:.6f}\n", res.theory_m12);
-        ofs << std::format("# MC m12    = {:.6f}\n", res.mc_m12);
         ofs << std::format(
             "# note: significance(L) = significance(N_MC)"
             " * sqrt(sigma_tot[fb] * L[ab^-1] * 1e3 / N_MC)\n");

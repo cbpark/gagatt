@@ -12,10 +12,9 @@ namespace gagatt {
 //   Phase 1: buildLumiCache: z-cache of (LumiWeights, L_tot)
 //   Phase 2: buildWeightTable: 2-D weight table + theory averages
 //   Phase 3: runEventLoop: accept/reject sampling of (q+, q-)
-//   Phase 4: reconstructFromMoments: C_ij^MC and derived quantities
-//   Phase 5: print results
-//   Phase 6: computeLumiScan: significance vs. integrated luminosity
-//   Phase 7: fill and return MCResult
+//   Phase 4: print results
+//   Phase 5: computeLumiScan: significance vs. integrated luminosity
+//   Phase 6: fill and return MCResult
 // -----------------------------------------------------------------------
 MCResult runMC(const MCConfig &cfg) {
     const double sqrts_max = (cfg.sqrts_max > 0.0) ? cfg.sqrts_max : cfg.sqrt_s;
@@ -52,11 +51,8 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 3: event loop
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
 
-    // Phase 4: reconstruct C_ij and all derived quantities at N_MC
-    const ReconstructedMC r = reconstructFromMoments(ev);
-
     // ------------------------------------------------------------------
-    // Phase 5: print results
+    // Phase 4: print results
     // ------------------------------------------------------------------
     std::cout << "\n-- MC results --\n";
     std::cout << std::format(" N events generated            : {}\n",
@@ -70,85 +66,17 @@ MCResult runMC(const MCConfig &cfg) {
                              sigma_eff_fb);
     std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
 
-    std::cout << "\n Reconstructed C_ij (rows: n,r,k; cols: n,r,k)\n";
-    const std::array<const char *, 3> ax = {"n", "r", "k"};
-    for (int a = 0; a < 3; ++a) {
-        std::cout << std::format(" C_{0}j :", ax[a]);
-        for (int b = 0; b < 3; ++b)
-            std::cout << std::format(" {:+.4f}+/-{:.4f}", r.mc_cij(a, b),
-                                     r.sigma_cij(a, b));
-        std::cout << "\n";
-    }
-    std::cout << "\n Reconstructed B_+ (top polarization)\n";
-    for (int a = 0; a < 3; ++a) {
-        std::cout << std::format(
-            " B+_{} : {:+.4f} +/- {:.4f}  (theory: {:+.4f})\n", ax[a],
-            r.mc_bp(a), r.sigma_bp(a), wt.theory_bp(a));
-    }
-
-    std::cout << "\n Reconstructed B_- (anti-top polarization)\n";
-    for (int a = 0; a < 3; ++a) {
-        std::cout << std::format(
-            " B-_{} : {:+.4f} +/- {:.4f}  (theory: {:+.4f})\n", ax[a],
-            r.mc_bm(a), r.sigma_bm(a), wt.theory_bm(a));
-    }
-
-    std::cout << std::format(
-        "\n Concurrence (MC,     <C(rho)>) : {:+.6f} +/- {:.6f}\n",
-        r.mc_concurrence, r.sigma_concurrence);
-    std::cout << std::format(" Concurrence (theory, <C(rho)>) : {:+.6f}\n",
-                             wt.theory_concurrence);
-    std::cout << std::format(" significance(Concurrence)      : {:.2f} sigma\n",
-                             r.significance_concurrence);
-    std::cout << std::format(
-        "\n D=(Cnn-|Crr+Ckk|)/3 (MC)     : {:+.6f} +/- {:.6f}\n", r.mc_D,
-        r.sigma_D);
-    std::cout << std::format(" D=(Cnn-|Crr+Ckk|)/3 (theory) : {:+.6f}\n",
-                             wt.theory_D);
-    std::cout << std::format(" significance(D)              : {:.2f} sigma\n",
-                             r.significance_D);
-
-    std::cout << std::format("\n m12 (MC)         : {:.6f}\n", r.mc_m12);
-    std::cout << std::format(" m12 (theory)     : {:.6f}\n", wt.theory_m12);
-    std::cout << std::format(" m12 - 1          : {:+.6f}\n", r.mc_m12 - 1.0);
-    std::cout << std::format(" sigma_m12 (N_MC) : {:.6f}\n", r.sigma_m12);
-    std::cout << std::format(" sig_m12 at N_MC : {:.2f} sigma\n",
-                             r.significance_m12);
-
-    // Phase 6: multi-seed luminosity scan
+    // Phase 5: multi-seed luminosity scan
     // rng is passed through: each seed is deterministically derived
     // from the main seed but independent of the Phase 3 event loop.
     const std::vector<LumiScanPoint> lumi_scan =
         computeLumiScan(cfg, sigma_eff_fb, wt, rng);
 
     // ------------------------------------------------------------------
-    // Phase 7: fill and return MCResult
+    // Phase 6: fill and return MCResult
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = ev.n_accepted;
-
-    // NOTE: if fields are added to ReconstructedMC or WeightTable,
-    // update this copy block accordingly.
-    res.mc_bp = r.mc_bp;
-    res.sigma_bp = r.sigma_bp;
-    res.mc_bm = r.mc_bm;
-    res.sigma_bm = r.sigma_bm;
-    res.theory_bp = wt.theory_bp;
-    res.theory_bm = wt.theory_bm;
-    res.mc_cij = r.mc_cij;
-    res.sigma_cij = r.sigma_cij;
-
-    res.mc_D = r.mc_D;
-    res.sigma_D = r.sigma_D;
-    res.significance_D = r.significance_D;
-
-    res.mc_concurrence = r.mc_concurrence;
-    res.sigma_concurrence = r.sigma_concurrence;
-    res.significance_concurrence = r.significance_concurrence;
-
-    res.mc_m12 = r.mc_m12;
-    res.sigma_m12 = r.sigma_m12;
-    res.significance_m12 = r.significance_m12;
 
     res.theory_concurrence = wt.theory_concurrence;
     res.theory_D = wt.theory_D;

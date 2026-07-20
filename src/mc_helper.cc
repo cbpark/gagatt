@@ -200,16 +200,8 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
         // Sample q+ and q- from the joint distribution
         const auto [qp, qm] = sampleDecayAngles(sdc, rng);
 
-        // Accumulate first moments (for B_+, B_-)
-        ev.S1_qp += qp;
-        ev.S2_qp += qp.cwiseProduct(qp);
-        ev.S1_qm += qm;
-        ev.S2_qm += qm.cwiseProduct(qm);
-
         // Accumulate outer product and its element-wise square (for C_ij)
         const Eigen::Matrix3d outer = qp * qm.transpose();
-        ev.S1_qpqm += outer;
-        ev.S2_qpqm += outer.cwiseProduct(outer);
 
         // per-bin accumulation — k identifies which (cos_th, sqrt_s_hat) bin
         ev.per_bin[k].S1_qpqm += outer;
