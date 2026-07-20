@@ -70,6 +70,14 @@ struct LumiScanPoint {
 struct MCResult {
     long long n_events_generated = 0;
 
+    // MC reconstructed quantities (at cfg.n_events)
+    double mc_concurrence = 0.0;
+    double mc_D = 0.0;
+    double mc_m12 = 0.0;
+    double sigma_concurrence = 0.0;
+    double sigma_D = 0.0;
+    double sigma_m12 = 0.0;
+
     // ----------------------------------------------------------------
     // Theory predictions (luminosity+phase-space weighted averages)
     // ----------------------------------------------------------------

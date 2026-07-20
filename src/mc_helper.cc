@@ -226,7 +226,8 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         if (bin.n < 1) { continue; }
         const double nk = static_cast<double>(bin.n);
 
-        const Eigen::Matrix3d cij_k = -9.0 * (bin.S1_qpqm / nk);
+        const Eigen::Matrix3d mean_qpqm_k = bin.S1_qpqm / nk;
+        const Eigen::Matrix3d cij_k = -9.0 * mean_qpqm_k;
         const Eigen::Vector3d bp_k = 3.0 * (bin.S1_qp / nk);
         const Eigen::Vector3d bm_k = -3.0 * (bin.S1_qm / nk);
 
@@ -243,7 +244,6 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         sum_wD += nk * entanglementMarker(cij_k);
         sum_wm12 += nk * m12FromCij(cij_k);
 
-        const Eigen::Matrix3d mean_qpqm_k = bin.S1_qpqm / nk;
         const Eigen::Matrix3d mean_qpqm2_k = bin.S2_qpqm / nk;
         const Eigen::Matrix3d var_mean_k =
             (mean_qpqm2_k - mean_qpqm_k.cwiseProduct(mean_qpqm_k)) / nk;

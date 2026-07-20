@@ -58,13 +58,6 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << "\n-- MC results --\n";
     std::cout << std::format(" N events generated            : {}\n",
                              ev.n_accepted);
-    std::cout << std::format(" Concurrence (MC, N={}) : {:.6f} +/- {:.6f}\n",
-                             cfg.n_events, r.mc_concurrence,
-                             r.sigma_concurrence);
-    std::cout << std::format(" D           (MC, N={}) : {:.6f} +/- {:.6f}\n",
-                             cfg.n_events, r.mc_D, r.sigma_D);
-    std::cout << std::format(" m12         (MC, N={}) : {:.6f} +/- {:.6f}\n",
-                             cfg.n_events, r.mc_m12, r.sigma_m12);
 
     const double sigma_prod_fb = wt.total_weight;
     const double sigma_eff_fb = sigma_prod_fb * BRLL;
@@ -73,6 +66,14 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << std::format(" effective xsec (* BR_ll)      : {:.4f} fb\n",
                              sigma_eff_fb);
     std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
+
+    std::cout << std::format("\n Concurrence (MC, N={}): {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_concurrence,
+                             r.sigma_concurrence);
+    std::cout << std::format(" D           (MC, N={}): {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_D, r.sigma_D);
+    std::cout << std::format(" m12         (MC, N={}): {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_m12, r.sigma_m12);
 
     // Phase 5: multi-seed luminosity scan
     // rng is passed through: each seed is deterministically derived
@@ -85,6 +86,13 @@ MCResult runMC(const MCConfig &cfg) {
     // ------------------------------------------------------------------
     MCResult res;
     res.n_events_generated = ev.n_accepted;
+
+    res.mc_concurrence = r.mc_concurrence;
+    res.mc_D = r.mc_D;
+    res.mc_m12 = r.mc_m12;
+    res.sigma_concurrence = r.sigma_concurrence;
+    res.sigma_D = r.sigma_D;
+    res.sigma_m12 = r.sigma_m12;
 
     res.theory_concurrence = wt.theory_concurrence;
     res.theory_D = wt.theory_D;
