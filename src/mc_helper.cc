@@ -78,9 +78,6 @@ WeightTable buildWeightTable(const MCConfig &cfg,
     wt.sdc_cache.reserve(N_bins);
 
     double tw_con = 0.0, tw_D = 0.0, tw_m12 = 0.0;
-    Eigen::Vector3d tw_bp = Eigen::Vector3d::Zero();
-    Eigen::Vector3d tw_bm = Eigen::Vector3d::Zero();
-
     const int print_every = std::max(1, cfg.n_cos / 5);
     std::cout << "-- building weight table ...\n";
     for (int i = 0; i < cfg.n_cos; ++i) {
@@ -104,8 +101,6 @@ WeightTable buildWeightTable(const MCConfig &cfg,
             tw_con += wt.bin_weights[idx] * getConcurrence(sdc);
             tw_D += wt.bin_weights[idx] * entanglementMarker(sdc);
             tw_m12 += wt.bin_weights[idx] * horodeckiMeasure(sdc);
-            tw_bp += wt.bin_weights[idx] * sdc.bp;
-            tw_bm += wt.bin_weights[idx] * sdc.bm;
         }
         if ((i + 1) % print_every == 0) {
             std::cout << std::format(" weight table: {}/{}\n", i + 1,
@@ -121,8 +116,6 @@ WeightTable buildWeightTable(const MCConfig &cfg,
     wt.theory_concurrence = tw_con / wt.total_weight;
     wt.theory_D = tw_D / wt.total_weight;
     wt.theory_m12 = tw_m12 / wt.total_weight;
-    wt.theory_bp = tw_bp / wt.total_weight;
-    wt.theory_bm = tw_bm / wt.total_weight;
 
     return wt;
 }

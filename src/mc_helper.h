@@ -64,9 +64,6 @@ struct WeightTable {
     double theory_concurrence = 0.0;
     double theory_D = 0.0;
     double theory_m12 = 0.0;
-
-    Eigen::Vector3d theory_bp = Eigen::Vector3d::Zero();
-    Eigen::Vector3d theory_bm = Eigen::Vector3d::Zero();
 };
 
 // Builds the flattened weight table over the (n_cos x n_sqrts) grid and
