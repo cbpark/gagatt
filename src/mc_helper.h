@@ -155,14 +155,19 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev);
 // -----------------------------------------------------------------------
 // Luminosity scan
 //
-// Rescales significance_concurrence, significance_D, and significance_m12
-// (computed at N_MC events) to an arbitrary integrated luminosity L
-// via statistical sqrt(N) scaling.
+// At each luminosity point L, compute N(L) = sigma_eff_fb * L_fb, then
+// run n_lumi_seeds independent MC event loops each with N(L) events,
+// reconstruct the observables from each seed, and report the mean and
+// std-dev of the significance across seeds.
+//
+// This correctly captures the degradation of mc_concurrence itself at
+// low luminosity (bin-emptying effect), which the old sqrt(N) rescaling
+// shortcut could not account for.
 // -----------------------------------------------------------------------
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
-                                           long long n_accepted,
-                                           const ReconstructedMC &r);
+                                           const WeightTable &wt,
+                                           std::mt19937_64 &rng);
 }  // namespace gagatt
 
 #endif  // SRC_MC_HELPER_H

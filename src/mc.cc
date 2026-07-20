@@ -52,7 +52,7 @@ MCResult runMC(const MCConfig &cfg) {
     // Phase 3: event loop
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
 
-    // Phase 4: reconstruct C_ij and all derived quantities
+    // Phase 4: reconstruct C_ij and all derived quantities at N_MC
     const ReconstructedMC r = reconstructFromMoments(ev);
 
     // ------------------------------------------------------------------
@@ -115,9 +115,11 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << std::format(" sig_m12 at N_MC : {:.2f} sigma\n",
                              r.significance_m12);
 
-    // Phase 6: luminosity scan
+    // Phase 6: multi-seed luminosity scan
+    // rng is passed through: each seed is deterministically derived
+    // from the main seed but independent of the Phase 3 event loop.
     const std::vector<LumiScanPoint> lumi_scan =
-        computeLumiScan(cfg, sigma_eff_fb, ev.n_accepted, r);
+        computeLumiScan(cfg, sigma_eff_fb, wt, rng);
 
     // ------------------------------------------------------------------
     // Phase 7: fill and return MCResult

@@ -4,6 +4,7 @@
 #include <format>
 #include <iostream>
 #include <numbers>
+#include <numeric>
 #include "constants.h"
 
 namespace gagatt {
@@ -338,54 +339,99 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 // -----------------------------------------------------------------------
 // computeLumiScan:
 //
-// The MC was run with N_MC = cfg.n_events (unweighted accepted events).
-// The physical event count at luminosity L [ab^-1] is:
+// For each luminosity point L:
+//   1. N(L) = sigma_eff_fb * L_fb  (physical event count)
+//   2. Run cfg.n_lumi_seeds independent event loops, each with N(L)
+//   events, using successive RNG states drawn from the provided rng.
+//   3. For each seed reconstruct mc_concurrence, sigma_concurrence, etc.
+//      and compute the per-seed significance.
+//   4. Report mean +/- std-dev of significance across seeds.
 //
-//   N(L) = sigma_eff [fb] * L [fb^-1]
-//        = sigma_eff [fb] * L [ab^-1] * 1e3   (1 ab^-1 = 1000 fb^-1)
-//
-// Statistical uncertainties scale as 1/sqrt(N), so:
-//
-//   sigma_X(L)      = sigma_X(N_MC) * sqrt(N_MC / N(L))
-//   significance(L) = significance(N_MC) * sqrt(N(L) / N_MC)
-//                   = significance(N_MC) * sqrt(sigma_eff * L * 1e3 / N_MC)
+// This correctly models the finite-statistics degradation of the
+// measured concurrence at low luminosity, which sqrt(N) rescaling
+// cannot capture.
 // -----------------------------------------------------------------------
 std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
-                                           long long n_accepted,
-                                           const ReconstructedMC &r) {
+                                           const WeightTable &wt,
+                                           std::mt19937_64 &rng) {
     std::vector<LumiScanPoint> lumi_scan;
     if (cfg.L_scan_min_ab >= cfg.L_scan_max_ab || cfg.n_L_points <= 1) {
         return lumi_scan;
     }
     if (sigma_eff_fb <= 0.0) { return lumi_scan; }
 
-    const double N_MC = static_cast<double>(n_accepted);
     const double dL = (cfg.L_scan_max_ab - cfg.L_scan_min_ab) /
                       static_cast<double>(cfg.n_L_points - 1);
+    const int K = std::max(1, cfg.n_lumi_seeds);
 
     std::cout << std::format(
-        "\n-- luminosity scan [{:.3f}, {:.3f}] ab^-1, {} points\n",
-        cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points);
+        "\n-- luminosity scan [{:.3f}, {:.3f}] ab^-1, {} points, {} "
+        "seeds/point\n",
+        cfg.L_scan_min_ab, cfg.L_scan_max_ab, cfg.n_L_points, K);
+    std::cout << std::format(
+        "   {:>6}  {:>10}  {:>12}  {:>12}  {:>10}  {:>10}  {:>10}\n", "pt",
+        "L[ab^-1]", "N(L)", "C_mean", "sig_C", "sigma_C", "sig_D");
 
     lumi_scan.reserve(cfg.n_L_points);
     for (int p = 0; p < cfg.n_L_points; ++p) {
         const double L_ab = cfg.L_scan_min_ab + p * dL;
         const double L_fb = L_ab * 1.0e3;        // ab^-1 -> fb^-1
         const double N_L = sigma_eff_fb * L_fb;  // physical event count
+        const long long N_events = static_cast<long long>(std::max(1.0, N_L));
 
         if (N_L <= 0.0) {
-            lumi_scan.push_back({L_ab, 0.0, 0.0, 0.0});
+            lumi_scan.push_back({L_ab, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+            std::cout << std::format(
+                "   {:>6}  {:>10.4f}  {:>12.1f}  {:>12}  {:>10}  {:>10}  "
+                "{:>10}\n",
+                p + 1, L_ab, 0.0, "N/A", "N/A", "N/A", "N/A");
             continue;
         }
 
-        const double scale = std::sqrt(N_L / N_MC);
-        const double sig_C_L = r.significance_concurrence * scale;
-        const double sig_D_L = r.significance_D * scale;
-        const double sig_m12_L = r.significance_m12 * scale;
-        lumi_scan.push_back({L_ab, sig_C_L, sig_D_L, sig_m12_L});
-    }
+        std::vector<double> sig_C(K), sig_D(K), sig_m12(K);
+        std::vector<double> con(K), scon(K);  // per-seed C and sigma_C
+        for (int k = 0; k < K; ++k) {
+            const uint64_t seed_k = rng();  // draw from main rng
+            std::mt19937_64 rng_k(seed_k);
 
+            const EventLoopResult ev_k = runEventLoop(N_events, wt, rng_k,
+                                                      /*verbose=*/false);
+            const ReconstructedMC recon_k = reconstructFromMoments(ev_k);
+
+            con[k] = recon_k.mc_concurrence;
+            scon[k] = recon_k.sigma_concurrence;
+            sig_C[k] = recon_k.significance_concurrence;
+            sig_D[k] = recon_k.significance_D;
+            sig_m12[k] = recon_k.significance_m12;
+        }
+
+        auto mean_of = [&](const std::vector<double> &v) {
+            return std::accumulate(v.begin(), v.end(), 0.0) / K;
+        };
+        auto stddev_of = [&](const std::vector<double> &v, double mu) {
+            if (K <= 1) return 0.0;
+            double acc = 0.0;
+            for (double x : v) acc += (x - mu) * (x - mu);
+            return std::sqrt(acc / (K - 1));  // sample std-dev
+        };
+
+        const double mC = mean_of(sig_C);
+        const double mD = mean_of(sig_D);
+        const double mm12 = mean_of(sig_m12);
+        const double mcon = mean_of(con);
+        const double mscon = mean_of(scon);
+
+        // progress line: one row per luminosity point
+        std::cout << std::format(
+            "   {:>6}  {:>10.4f}  {:>12.1f}  {:>12.6f}  {:>10.4f}  {:>10.6f}  "
+            "{:>10.4f}\n",
+            p + 1, L_ab, N_L, mcon, mC, mscon, mD);
+
+        lumi_scan.push_back({L_ab, mC, mD, mm12, stddev_of(sig_C, mC),
+                             stddev_of(sig_D, mD), stddev_of(sig_m12, mm12)});
+    }
+    std::cout << std::flush;
     return lumi_scan;
 }
 }  // namespace gagatt
