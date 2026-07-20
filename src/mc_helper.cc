@@ -199,7 +199,9 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
         ev.per_bin[k].S1_qpqm += outer;
         ev.per_bin[k].S2_qpqm += outer.cwiseProduct(outer);
         ev.per_bin[k].S1_qp += qp;
+        ev.per_bin[k].S2_qp += qp.cwiseProduct(qp);
         ev.per_bin[k].S1_qm += qm;
+        ev.per_bin[k].S2_qm += qm.cwiseProduct(qm);
         ev.per_bin[k].n += 1;
 
         ++ev.n_accepted;
@@ -248,12 +250,32 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         const Eigen::Matrix3d var_mean_k =
             (mean_qpqm2_k - mean_qpqm_k.cwiseProduct(mean_qpqm_k)) / nk;
 
+        // Per-bin variance of B+ and B-
+        // Var[<q+_i>_k] = (E[q+_i^2] - E[q+_i]^2) / n_k
+        // sigma_bp_k(i) = 3 * sqrt(Var[<q+_i>_k])
+        const Eigen::Vector3d mean_qp_k = bin.S1_qp / nk;
+        const Eigen::Vector3d mean_qp2_k = bin.S2_qp / nk;
+        const Eigen::Vector3d var_qp_k =
+            (mean_qp2_k - mean_qp_k.cwiseProduct(mean_qp_k)) / nk;
+        const Eigen::Vector3d sigma_bp_k =
+            3.0 * var_qp_k.cwiseMax(0.0).cwiseSqrt();
+        const Eigen::Vector3d mean_qm_k = bin.S1_qm / nk;
+        const Eigen::Vector3d mean_qm2_k = bin.S2_qm / nk;
+        const Eigen::Vector3d var_qm_k =
+            (mean_qm2_k - mean_qm_k.cwiseProduct(mean_qm_k)) / nk;
+        const Eigen::Vector3d sigma_bm_k =
+            3.0 * var_qm_k.cwiseMax(0.0).cwiseSqrt();
+
         // --- sigma_concurrence per bin ---
-        // sigma_cij_k(i,j) = 9 * sqrt(Var[<qp_i qm_j>_k])
-        // Conservative: sigma_con_k = 0.5 * ||sigma_cij_k||_F
+        // Conservative Frobenius bound including B+ and B-:
+        // ||delta_rho||_F = 0.5 * sqrt(||dB+||^2 + ||dB-||^2 + ||dC||_F^2)
+        // => sigma_con_k = 0.5 * sqrt(||sigma_bp_k||^2
+        //                        + ||sigma_bm_k||^2 + ||sigma_cij_k||_F^2)
         const Eigen::Matrix3d sigma_cij_k =
             9.0 * var_mean_k.cwiseMax(0.0).cwiseSqrt();
-        const double sigma_con_k = 0.5 * sigma_cij_k.norm();
+        const double sigma_con_k = 0.5 * std::sqrt(sigma_bp_k.squaredNorm() +
+                                                   sigma_bm_k.squaredNorm() +
+                                                   sigma_cij_k.squaredNorm());
         sum_w2_varC += nk * nk * sigma_con_k * sigma_con_k;
 
         // --- sigma_D per bin ---

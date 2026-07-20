@@ -88,7 +88,9 @@ struct BinMoments {
     Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();
     Eigen::Matrix3d S2_qpqm = Eigen::Matrix3d::Zero();
     Eigen::Vector3d S1_qp = Eigen::Vector3d::Zero();
+    Eigen::Vector3d S2_qp = Eigen::Vector3d::Zero();
     Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();
+    Eigen::Vector3d S2_qm = Eigen::Vector3d::Zero();
     long long n = 0;
 };
 
