@@ -50,6 +50,7 @@ MCResult runMC(const MCConfig &cfg) {
 
     // Phase 3: event loop
     const EventLoopResult ev = runEventLoop(cfg.n_events, wt, rng);
+    const ReconstructedMC r = reconstructFromMoments(ev);
 
     // ------------------------------------------------------------------
     // Phase 4: print results
@@ -57,6 +58,13 @@ MCResult runMC(const MCConfig &cfg) {
     std::cout << "\n-- MC results --\n";
     std::cout << std::format(" N events generated            : {}\n",
                              ev.n_accepted);
+    std::cout << std::format(" Concurrence (MC, N={}) : {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_concurrence,
+                             r.sigma_concurrence);
+    std::cout << std::format(" D           (MC, N={}) : {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_D, r.sigma_D);
+    std::cout << std::format(" m12         (MC, N={}) : {:.6f} +/- {:.6f}\n",
+                             cfg.n_events, r.mc_m12, r.sigma_m12);
 
     const double sigma_prod_fb = wt.total_weight;
     const double sigma_eff_fb = sigma_prod_fb * BRLL;

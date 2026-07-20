@@ -180,9 +180,8 @@ std::pair<Eigen::Vector3d, Eigen::Vector3d> sampleDecayAngles(
 // For each event, draw a (cos_th, sqrt_s_hat) bin, then sample decay
 // directions (q+, q-).
 //
-// Accumulate:
-//   S_ij  = sum q+_i * q-_j          (first moment)
-//   S2_ij = sum (q+_i * q-_j)^2      (second moment, for variance)
+// Accumulate per-bin moments: S1_qpqm, S2_qpqm, S1_qp, S1_qm, n.
+// All variance estimation is done per-bin in reconstructFromMoments().
 // -----------------------------------------------------------------------
 EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
                              std::mt19937_64 &rng, bool verbose) {

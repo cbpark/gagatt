@@ -98,19 +98,10 @@ struct BinMoments {
 // -----------------------------------------------------------------------
 // EventLoopResult
 //
-// Raw first/second moments of the outer product q+_i * q-_j, accumulated
-// over n_accepted sampled events.
-// S2_* fields are used only for global sigma estimation in
-// reconstructFromMoments(); they are not accumulated per-bin.
+// Accumulated event count and per-bin moments from the MC event loop.
+// All sigma estimation is done from per-bin S2_qpqm in BinMoments.
 // -----------------------------------------------------------------------
 struct EventLoopResult {
-    Eigen::Matrix3d S1_qpqm = Eigen::Matrix3d::Zero();  // sum q+_i q-_j
-    Eigen::Matrix3d S2_qpqm = Eigen::Matrix3d::Zero();  // sum (q+_i q-_j)^2
-
-    Eigen::Vector3d S1_qp = Eigen::Vector3d::Zero();  // sum q+_i
-    Eigen::Vector3d S2_qp = Eigen::Vector3d::Zero();  // sum (q+_i)^2
-    Eigen::Vector3d S1_qm = Eigen::Vector3d::Zero();  // sum q-_i
-    Eigen::Vector3d S2_qm = Eigen::Vector3d::Zero();  // sum (q-_i)^2
     long long n_accepted = 0;
 
     std::vector<BinMoments> per_bin;
