@@ -221,58 +221,15 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
 
 // -----------------------------------------------------------------------
 // reconstructFromMoments:
-//
-// After N events:
-//   <q+_i>  = S1_qp/N,   B_{+i} = 3 <q+_i>
-//   <q-_j>  = S1_qm/N,   B_{-j} = -3 <q-_j>
-//   <qi qj> = S1_qpqm/N, C_ij   = -9 <q+_i q-_j>
-//
-//   Var[<q+_i>]   = (S2_qp/N - <q+_i>^2) / N,  sigma[B_+i] = 3 sqrt(Var)
-//   Var[<q-_j>]   = (S2_qm/N - <q-_j>^2) / N,  sigma[B_-j] = 3 sqrt(Var)
-//   Var[<qi qj>]  = (S2_qpqm/N - <qi qj>^2)/N, sigma[C_ij] = 9 sqrt(Var)
 // -----------------------------------------------------------------------
 ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
     ReconstructedMC r;
-    const double n = static_cast<double>(ev.n_accepted);
 
-    // --- B_+ and B_- ---
-    const Eigen::Vector3d mean_qp = ev.S1_qp / n;
-    const Eigen::Vector3d mean_qp2 = ev.S2_qp / n;
-    const Eigen::Vector3d var_qp =
-        (mean_qp2 - mean_qp.cwiseProduct(mean_qp)) / n;
-
-    r.mc_bp = 3.0 * mean_qp;
-    r.sigma_bp = 3.0 * var_qp.cwiseMax(0.0).cwiseSqrt();
-
-    const Eigen::Vector3d mean_qm = ev.S1_qm / n;
-    const Eigen::Vector3d mean_qm2 = ev.S2_qm / n;
-    const Eigen::Vector3d var_qm =
-        (mean_qm2 - mean_qm.cwiseProduct(mean_qm)) / n;
-
-    r.mc_bm = -3.0 * mean_qm;
-    r.sigma_bm = 3.0 * var_qm.cwiseMax(0.0).cwiseSqrt();
-
-    // --- C_ij ---
-    const Eigen::Matrix3d mean_qpqm = ev.S1_qpqm / n;
-
-    // C_ij^MC = -9 * <q+_i q-_j>
-    r.mc_cij = -9.0 * mean_qpqm;
-
-    // Variance of the mean per element: Var[<x>] = (E[x^2] - E[x]^2) / N
-    const Eigen::Matrix3d mean_qpqm2 = ev.S2_qpqm / n;
-    const Eigen::Matrix3d var_mean =
-        (mean_qpqm2 - mean_qpqm.cwiseProduct(mean_qpqm)) / n;
-
-    // sigma[C_ij] = 9 * sqrt(Var[<qi qj>])
-    r.sigma_cij = 9.0 * var_mean.cwiseMax(0.0).cwiseSqrt();
-
-    // ------------------------------------------------------------------
     // Compute <C(rho_k)>: concurrence / D / m12 per bin, then average.
-    // This is <C(rho_k)>, NOT C(<rho>).
-    // ------------------------------------------------------------------
-    double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm = 0.0;
-    double sum_w2_varC =
-        0.0;  // sum n_k^2 * sigma_C_k^2 (for error propagation)
+    double sum_w = 0.0, sum_wC = 0.0, sum_wD = 0.0, sum_wm12 = 0.0;
+    double sum_w2_varC = 0.0;    // sum n_k^2 * sigma_C_k^2
+    double sum_w2_varD = 0.0;    // sum n_k^2 * sigma_D_k^2
+    double sum_w2_varm12 = 0.0;  // sum n_k^2 * sigma_m12_k^2
     for (const auto &bin : ev.per_bin) {
         if (bin.n < 1) { continue; }
         const double nk = static_cast<double>(bin.n);
@@ -292,53 +249,61 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         sum_w += nk;
         sum_wC += nk * getConcurrence(rho_k);
         sum_wD += nk * entanglementMarker(cij_k);
-        sum_wm += nk * m12FromCij(cij_k);
+        sum_wm12 += nk * m12FromCij(cij_k);
 
-        // Per-bin sigma_cij: Var[<q+_i q-_j>_k] = (E[x^2] - E[x]^2) / n_k
-        // sigma_cij_k(i,j) = 9 * sqrt(Var[<q+_i q-_j>_k])
         const Eigen::Matrix3d mean_qpqm_k = bin.S1_qpqm / nk;
         const Eigen::Matrix3d mean_qpqm2_k = bin.S2_qpqm / nk;
         const Eigen::Matrix3d var_mean_k =
             (mean_qpqm2_k - mean_qpqm_k.cwiseProduct(mean_qpqm_k)) / nk;
+
+        // --- sigma_concurrence per bin ---
+        // sigma_cij_k(i,j) = 9 * sqrt(Var[<qp_i qm_j>_k])
+        // Conservative: sigma_con_k = 0.5 * ||sigma_cij_k||_F
         const Eigen::Matrix3d sigma_cij_k =
             9.0 * var_mean_k.cwiseMax(0.0).cwiseSqrt();
-        // Conservative per-bin sigma_concurrence
         const double sigma_con_k = 0.5 * sigma_cij_k.norm();
-        // Accumulate n_k^2 * sigma_con_k^2 for weighted error propagation
         sum_w2_varC += nk * nk * sigma_con_k * sigma_con_k;
+
+        // --- sigma_D per bin ---
+        // D_k = (C_nn_k - |C_rr_k + C_kk_k|) / 3
+        // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3
+        // => sigma_D_k = (1/3) * sqrt(var_nn_k + var_rr_k + var_kk_k)
+        //   where var_XY_k = 81 * var_mean_k(i,i)  [factor 9^2 from C_ij =
+        //   -9*<qp qm>]
+        // Combining: sigma_D_k = 3 * sqrt(var_mean_k(0,0) + var_mean_k(1,1) +
+        // var_mean_k(2,2))
+        const double var_diag_k = std::max(
+            0.0, var_mean_k(0, 0) + var_mean_k(1, 1) + var_mean_k(2, 2));
+        const double sigma_D_k = 3.0 * std::sqrt(var_diag_k);
+        sum_w2_varD += nk * nk * sigma_D_k * sigma_D_k;
+
+        // --- sigma_m12 per bin ---
+        // Conservative bound: sigma_m12_k = sqrt(2) * ||sigma_cij_k||_F
+        //                                 = sqrt(2) * 9 * sqrt(sum var_mean_k
+        //                                 entries)
+        const double sigma_m12_k = std::sqrt(2.0 * sigma_cij_k.squaredNorm());
+        sum_w2_varm12 += nk * nk * sigma_m12_k * sigma_m12_k;
     }
     r.mc_concurrence = (sum_w > 0.0) ? sum_wC / sum_w : 0.0;
     r.mc_D = (sum_w > 0.0) ? sum_wD / sum_w : 0.0;
-    r.mc_m12 = (sum_w > 0.0) ? sum_wm / sum_w : 0.0;
+    r.mc_m12 = (sum_w > 0.0) ? sum_wm12 / sum_w : 0.0;
 
-    // sigma_concurrence: per-bin weighted propagation.
-    // mc_concurrence = (1/W) * sum_k n_k * C_k,  W = sum_k n_k
-    // sigma^2 = (1/W)^2 * sum_k n_k^2 * sigma_C_k^2
+    // sigma^2 = (1/W)^2 * sum_k n_k^2 * sigma_X_k^2
     r.sigma_concurrence = (sum_w > 0.0) ? std::sqrt(sum_w2_varC) / sum_w : 0.0;
+    r.sigma_D = (sum_w > 0.0) ? std::sqrt(sum_w2_varD) / sum_w : 0.0;
+    r.sigma_m12 = (sum_w > 0.0) ? std::sqrt(sum_w2_varm12) / sum_w : 0.0;
+
     // significance of C > 0 (entanglement detection threshold)
     r.significance_concurrence =
         (r.sigma_concurrence > 0.0 && r.mc_concurrence > 0.0)
             ? r.mc_concurrence / r.sigma_concurrence
             : 0.0;
 
-    // sigma_D is propagated from the global C_ij variance (var_mean),
-    // not from the per-bin mc_D. This is conservative and consistent
-    // with sigma_cij. |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3
-    // regardless of sign of (C_rr+C_kk), so
-    // sigma_D = 3*sqrt(sum var_mean(i,i)).
-    r.sigma_D = 3.0 * std::sqrt(std::max(0.0, var_mean(0, 0) + var_mean(1, 1) +
-                                                  var_mean(2, 2)));
     const double D_excess =
         -1.0 / 3.0 - r.mc_D;  // positive when D < -1/3 (entangled)
     r.significance_D =
         (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
-    // sigma^2[m12] = sum[i,j] (d m12 / d C_ij)^2 sigma^2[C_ij]
-    //
-    // Conservative rough bound: replaces each (d m12 / d C_ij)^2 by 2,
-    // valid as an order-of-magnitude estimate near the Bell boundary
-    // (m12 ~ 1). Exact propagation requires eigenvectors of C*C^T.
-    r.sigma_m12 = std::sqrt(2.0 * r.sigma_cij.squaredNorm());
     r.significance_m12 = (r.sigma_m12 > 0.0 && r.mc_m12 > 1.0)
                              ? (r.mc_m12 - 1.0) / r.sigma_m12
                              : 0.0;

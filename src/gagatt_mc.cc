@@ -129,9 +129,6 @@ int main(int argc, char *argv[]) {
         ofs << std::format("# theory C  = {:.6f}\n", res.theory_concurrence);
         ofs << std::format("# theory D  = {:.6f}\n", res.theory_D);
         ofs << std::format("# theory m12= {:.6f}\n", res.theory_m12);
-        ofs << std::format(
-            "# note: significance(L) = significance(N_MC)"
-            " * sqrt(sigma_tot[fb] * L[ab^-1] * 1e3 / N_MC)\n");
         ofs << std::format("#\n");
         ofs << std::format("# {:>12s} {:>16s} {:>16s} {:>16s}\n", "L[ab^-1]",
                            "sig_C[sigma]", "sig_D[sigma]", "sig_m12[sigma]");

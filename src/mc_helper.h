@@ -129,14 +129,6 @@ EventLoopResult runEventLoop(long long n_events, const WeightTable &wt,
 // Horodecki m12 parameter.
 // -----------------------------------------------------------------------
 struct ReconstructedMC {
-    Eigen::Vector3d mc_bp = Eigen::Vector3d::Zero();
-    Eigen::Vector3d sigma_bp = Eigen::Vector3d::Zero();
-    Eigen::Vector3d mc_bm = Eigen::Vector3d::Zero();
-    Eigen::Vector3d sigma_bm = Eigen::Vector3d::Zero();
-
-    Eigen::Matrix3d mc_cij = Eigen::Matrix3d::Zero();
-    Eigen::Matrix3d sigma_cij = Eigen::Matrix3d::Zero();
-
     double mc_concurrence = 0.0;
     double sigma_concurrence = 0.0;
     double significance_concurrence = 0.0;
