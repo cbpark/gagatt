@@ -34,11 +34,8 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
 // partialXsec:
 // d sigma_hat / d cos_th (helicity-summed, luminosity-weighted)
 // = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
-//
-// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
-// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
 // -----------------------------------------------------------------------
-static double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
+double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
     if (sdc.norm_factor <= 0.0) { return 0.0; }
 
     const double s_hat = sqrt_s_hat * sqrt_s_hat;
@@ -49,7 +46,7 @@ static double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc) {
 
     // beta Nc / (32 pi s_hat)
     const double prefac = beta * NC / (32.0 * std::numbers::pi * s_hat);
-    return prefac * sdc.norm_factor;
+    return prefac * sdc.norm_factor;  // GeV^-2
 }
 
 // -----------------------------------------------------------------------

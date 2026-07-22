@@ -38,6 +38,20 @@ std::vector<ZCacheEntry> buildLumiCache(const MCConfig &cfg, double pc1,
                                         double d_sqrts);
 
 // -----------------------------------------------------------------------
+// partialXsec:
+//
+// differential partonic cross section d sigma_hat / d cos_th [GeV^-2]
+// = (beta Nc / 32 pi s_hat) * |A_C|^2 * (C_1^w + C_3^w)
+//
+// sdc.norm_factor = C_1^w + C_3^w, with |A_C|^2 already absorbed via
+// overall_fac^2 = (COUPLING_FACTOR / denom)^2 inside polCoeffsForHelicity.
+// For unpolarized photon average, divide by 4 afterwards.
+// This was previously static in mc_helper.cc – now public so that
+// sqrt_s_hat_xsec.cc and other analyses can reuse it.
+// -----------------------------------------------------------------------
+double partialXsec(double sqrt_s_hat, const SDMatrixCoefficients &sdc);
+
+// -----------------------------------------------------------------------
 // eventRate
 //
 // differential event rate d^2 sigma / (d sqrt_s_hat d cos_th) [fb/GeV].
