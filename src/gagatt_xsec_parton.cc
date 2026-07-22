@@ -54,7 +54,8 @@ constexpr double COS_MAX = 1.0;
 int main(int argc, char *argv[]) {
     if (argc != 3 && argc != 4) {
         std::cerr
-            << "usage: ./bin/sqrt_s_hat_xsec <output.dat> <N_SQRTS> [N_COS]\n"
+            << "usage: ./bin/gagatt_xsec_parton <output.dat> <N_SQRTS> "
+               "[N_COS]\n"
             << "  <output.dat>: output file\n"
             << "  <N_SQRTS>: number of sqrt(s_hat) points\n"
             << "  [N_COS]: number of cos integration steps (default 1000)\n";
