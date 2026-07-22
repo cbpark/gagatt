@@ -94,7 +94,7 @@ PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
     const auto mp_plus_pm = mp + pm;
     const auto mp_minus_pm = mp - pm;
 
-    return {
+    PolarizationCoefficients coeffs{
         pp2 + mm2,                                       // c1
         pp2 - mm2,                                       // c2
         mp2 + pm2,                                       // c3
@@ -112,6 +112,7 @@ PolarizationCoefficients polCoeffsForHelicity(const KinematicContext &k,
         -2.0 * (mp * std::conj(pm)).real(),              // c15
         -2.0 * (mp * std::conj(pm)).imag()               // c16
     };
+    return coeffs * 0.25;
 }
 
 PolarizationCoefficients polCoeffsForHelicity(double sqrt_s_hat, double cos_th,

@@ -19,7 +19,7 @@ double diffXsec_fixedHel(double sqrt_s_hat, double cos_th, Helicity l1,
     // build SDMatrixCoefficients from pol -> norm = c1+c3
     const SDMatrixCoefficients sdc(pol);
     const double dsig_GeV2 = partialXsec(sqrt_s_hat, sdc);  // GeV^-2
-    return dsig_GeV2 * GEV2_TO_FB;                          // fb per unit cos
+    return dsig_GeV2 * 4.0 * GEV2_TO_FB;                    // fb per unit cos
 }
 
 double diffXsec_unpol(double sqrt_s_hat, double cos_th) {
@@ -29,7 +29,7 @@ double diffXsec_unpol(double sqrt_s_hat, double cos_th) {
     const SDMatrixCoefficients sdc(sqrt_s_hat, cos_th);
     const double dsig_GeV2_summed = partialXsec(sqrt_s_hat, sdc);
     // average over 4 photon helicity combos for unpolarized
-    return dsig_GeV2_summed / 4.0 * GEV2_TO_FB;
+    return dsig_GeV2_summed * GEV2_TO_FB;
 }
 
 // Integrate over cos_th in [cos_min, cos_max] using Simpson's rule
