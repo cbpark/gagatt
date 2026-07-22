@@ -45,8 +45,8 @@ struct MCConfig {
     // L_scan_min / L_scan_max  [ab^-1]   (0 disables the scan)
     // ----------------------------------------------------------------
     double L_scan_min_ab = 0.01;  // [ab^-1]
-    double L_scan_max_ab = 0.2;   // [ab^-1]
-    int n_L_points = 20;
+    double L_scan_max_ab = 0.6;   // [ab^-1]
+    int n_L_points = 60;
 
     // Number of independent MC seeds to average over at each lumi point.
     // Set to 1 to reproduce the old single-seed behaviour (no spread).

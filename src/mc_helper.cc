@@ -244,7 +244,8 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         sum_w += nk;
         sum_wC += nk * getConcurrence(rho_k);
         sum_wD += nk * entanglementMarker(cij_k);
-        sum_wm12 += nk * m12FromCij(cij_k);
+        const double m12_k = m12FromCij(cij_k);
+        sum_wm12 += nk * m12_k;
 
         const Eigen::Matrix3d mean_qpqm2_k = bin.S2_qpqm / nk;
         const Eigen::Matrix3d var_mean_k =
@@ -268,41 +269,28 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
 
         // --- sigma_concurrence per bin ---
         // Conservative Frobenius bound including B+ and B-:
-        // ||delta_rho||_F = 0.5 * sqrt(||dB+||^2 + ||dB-||^2 + ||dC||_F^2)
-        // => sigma_con_k = 0.5 * sqrt(||sigma_bp_k||^2
-        //                        + ||sigma_bm_k||^2 + ||sigma_cij_k||_F^2)
+        // sqrt(||sigma_bp_k||^2 + ||sigma_bm_k||^2 + ||sigma_cij_k||_F^2)
         const Eigen::Matrix3d sigma_cij_k =
             9.0 * var_mean_k.cwiseMax(0.0).cwiseSqrt();
-        const double sigma_con_k = 0.5 * std::sqrt(sigma_bp_k.squaredNorm() +
-                                                   sigma_bm_k.squaredNorm() +
-                                                   sigma_cij_k.squaredNorm());
+        const double sigma_con_k =
+            std::sqrt(sigma_bp_k.squaredNorm() + sigma_bm_k.squaredNorm() +
+                      sigma_cij_k.squaredNorm());
         sum_w2_varC += nk * nk * sigma_con_k * sigma_con_k;
 
         // --- sigma_D per bin ---
-        // D_k = (C_nn_k - |C_rr_k + C_kk_k|) / 3
-        // |dD/dC_nn| = |dD/dC_rr| = |dD/dC_kk| = 1/3
-        // => sigma_D_k = (1/3) * sqrt(var_nn_k + var_rr_k + var_kk_k)
-        //   where var_XY_k = 81 * var_mean_k(i,i)  [factor 9^2 from C_ij =
-        //   -9*<qp qm>]
-        // Combining: sigma_D_k = 3 * sqrt(var_mean_k(0,0) + var_mean_k(1,1) +
-        // var_mean_k(2,2))
-        const double var_diag_k = std::max(
-            0.0, var_mean_k(0, 0) + var_mean_k(1, 1) + var_mean_k(2, 2));
-        const double sigma_D_k = 3.0 * std::sqrt(var_diag_k);
+        // Conservative bound: 1/sqrt(3) * ||sigma_cij_k||_F
+        const double sigma_D_k = std::numbers::inv_sqrt3 * sigma_cij_k.norm();
         sum_w2_varD += nk * nk * sigma_D_k * sigma_D_k;
 
         // --- sigma_m12 per bin ---
-        // Conservative bound: sigma_m12_k = sqrt(2) * ||sigma_cij_k||_F
-        //                                 = sqrt(2) * 9 * sqrt(sum var_mean_k
-        //                                 entries)
-        const double sigma_m12_k = std::sqrt(2.0 * sigma_cij_k.squaredNorm());
+        // Conservative bound: sigma_m12_k = 2 * sqrt(m12) * ||sigma_cij_k||_F
+        const double sigma_m12_k = 2.0 * std::sqrt(m12_k) * sigma_cij_k.norm();
         sum_w2_varm12 += nk * nk * sigma_m12_k * sigma_m12_k;
     }
     r.mc_concurrence = (sum_w > 0.0) ? sum_wC / sum_w : 0.0;
     r.mc_D = (sum_w > 0.0) ? sum_wD / sum_w : 0.0;
     r.mc_m12 = (sum_w > 0.0) ? sum_wm12 / sum_w : 0.0;
 
-    // sigma^2 = (1/W)^2 * sum_k n_k^2 * sigma_X_k^2
     r.sigma_concurrence = (sum_w > 0.0) ? std::sqrt(sum_w2_varC) / sum_w : 0.0;
     r.sigma_D = (sum_w > 0.0) ? std::sqrt(sum_w2_varD) / sum_w : 0.0;
     r.sigma_m12 = (sum_w > 0.0) ? std::sqrt(sum_w2_varm12) / sum_w : 0.0;
@@ -319,7 +307,7 @@ ReconstructedMC reconstructFromMoments(const EventLoopResult &ev) {
         (r.sigma_D > 0.0 && D_excess > 0.0) ? D_excess / r.sigma_D : 0.0;
 
     r.significance_m12 = (r.sigma_m12 > 0.0 && r.mc_m12 > 1.0)
-                             ? (r.mc_m12 - 1.0) / r.sigma_m12
+                             ? std::abs(r.mc_m12 - 1.0) / r.sigma_m12
                              : 0.0;
 
     return r;
