@@ -42,8 +42,8 @@ struct MCConfig {
     // Luminosity scan for significance plot
     // L_scan_min / L_scan_max  [ab^-1]   (0 disables the scan)
     // ----------------------------------------------------------------
-    double L_scan_min_ab = 0.01;  // [ab^-1]
-    double L_scan_max_ab = 1.0;   // [ab^-1]
+    double L_scan_min_ab = 0.001;  // [ab^-1]
+    double L_scan_max_ab = 0.5;   // [ab^-1]
     int n_L_points = 100;
 
     // Number of independent MC seeds to average over at each lumi point.
