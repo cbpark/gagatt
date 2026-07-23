@@ -29,7 +29,7 @@ struct MCConfig {
     double cos_th_max = +1.0;
 
     // Grid for luminosity-weight z-cache
-    int n_sqrts = 50;
+    int n_sqrts = 40;
     int n_cos = 20;
 
     // MC statistics
@@ -43,13 +43,13 @@ struct MCConfig {
     // L_scan_min / L_scan_max  [ab^-1]   (0 disables the scan)
     // ----------------------------------------------------------------
     double L_scan_min_ab = 0.01;  // [ab^-1]
-    double L_scan_max_ab = 2.0;   // [ab^-1]
-    int n_L_points = 200;
+    double L_scan_max_ab = 1.0;   // [ab^-1]
+    int n_L_points = 100;
 
     // Number of independent MC seeds to average over at each lumi point.
     // Set to 1 to reproduce the old single-seed behavior (no spread).
     // Recommended: 10-20 for a smooth band; 1 is a fast approximation.
-    int n_lumi_seeds = 10;
+    int n_lumi_seeds = 50;
 };
 
 struct LumiScanPoint {
