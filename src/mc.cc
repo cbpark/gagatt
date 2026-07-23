@@ -60,12 +60,12 @@ MCResult runMC(const MCConfig &cfg) {
                              ev.n_accepted);
 
     const double sigma_prod_fb = wt.total_weight;
-    const double sigma_eff_fb = sigma_prod_fb * BRLL;
-    std::cout << std::format(" production xsec (ee->gaga->tt): {:.4f} fb\n",
+    const double sigma_eff_fb = sigma_prod_fb * (BRLL + BRLJ);
+    std::cout << std::format(" production xsec (ee->gaga->tt)   : {:.4f} fb\n",
                              sigma_prod_fb);
-    std::cout << std::format(" effective xsec (* BR_ll)      : {:.4f} fb\n",
+    std::cout << std::format(" effective xsec (* (BR_ll + BRlj)): {:.4f} fb\n",
                              sigma_eff_fb);
-    std::cout << std::format(" BR(tt->ll)                    : {:.4f}\n", BRLL);
+    std::cout << std::format(" BR(tt->ll/lj)                    : {:.4f}\n", BRLL + BRLJ);
 
     std::cout << std::format("\n Concurrence (theory)  : {:.6f}\n",
                              wt.theory_concurrence);
