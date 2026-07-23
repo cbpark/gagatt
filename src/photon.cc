@@ -193,12 +193,6 @@ LumiWeightsAndTotal lumiWeightsAndTotal(double z, double x, double pe1,
             sum};
 }
 
-// // Convenience wrapper: normalised weights only, no extra computation.
-// LumiWeights lumiWeights(double z, double x, double pe1, double pc1, double pe2,
-//                         double pc2) {
-//     return lumiWeightsAndTotal(z, x, pe1, pc1, pe2, pc2).lw;
-// }
-
 // Polarised luminosity for a specific helicity pair.
 // Delegates to lumiWeightsAndTotal so the 4 integrations run exactly once.
 double photonLuminosity(double z, double x, double pe1, double pc1, double pe2,
