@@ -26,6 +26,12 @@ using namespace gagatt;
 constexpr double SQRTS_SCAN_MIN = 350.0;   // GeV
 constexpr double SQRTS_SCAN_MAX = 2000.0;  // GeV
 
+double sigma_pt(double sqrt_s) {
+    const double s = sqrt_s * sqrt_s;
+    const double alpha2 = ALPHA * ALPHA;
+    return 4 * std::numbers::pi * alpha2 / (3.0 * s) * GEV2_TO_FB;
+}
+
 // ---------------------------------------------------------------------------
 // diffEventRate_fixedHel:
 //   d^2 sigma^{l1,l2} / (d sqrt(s_hat) d cos(Theta))  [fb/GeV]
@@ -58,6 +64,7 @@ XsecResult computeTotalXsec(double sqrt_s, double pe1, double pe2, double x,
     const double sqrts_hat_min = 2.0 * MTOP + 1.0;
     const double sqrts_hat_max = sqrt_s;
     const double d_sqrts_hat = (sqrts_hat_max - sqrts_hat_min) / n_sqrts_hat;
+    const double s_pt = sigma_pt(sqrt_s);
 
     XsecResult res = {0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -95,10 +102,10 @@ XsecResult computeTotalXsec(double sqrt_s, double pe1, double pe2, double x,
         const double r_mp = integrate_cos(f_mp, -1.0, 1.0, n_cos);
         const double r_mm = integrate_cos(f_mm, -1.0, 1.0, n_cos);
 
-        res.pp += r_pp * d_sqrts_hat;
-        res.pm += r_pm * d_sqrts_hat;
-        res.mp += r_mp * d_sqrts_hat;
-        res.mm += r_mm * d_sqrts_hat;
+        res.pp += r_pp * d_sqrts_hat / s_pt;
+        res.pm += r_pm * d_sqrts_hat / s_pt;
+        res.mp += r_mp * d_sqrts_hat / s_pt;
+        res.mm += r_mm * d_sqrts_hat / s_pt;
     }
 
     res.total = res.pp + res.pm + res.mp + res.mm;
