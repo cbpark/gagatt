@@ -6,6 +6,10 @@
 #include <vector>
 #include "amplitude.h"
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 namespace gagatt {
 void normaliseFromPol(const PolarizationCoefficients &pol, Eigen::Vector3d &bp,
                       Eigen::Vector3d &bm, Eigen::Matrix3d &cc,
