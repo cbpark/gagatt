@@ -26,6 +26,9 @@ inline constexpr double COUPLING_FACTOR =
 
 // Conversion: 1 GeV^{-2} = 0.3894 mb = 3.894e11 fb
 inline constexpr double GEV2_TO_FB = 3.893793721e11;  // exact to 10 sig figs
+
+// machine parameter x
+inline constexpr double X_DEFAULT = 4.8;
 }  // namespace gagatt
 
 #endif  // SRC_CONSTANTS_H

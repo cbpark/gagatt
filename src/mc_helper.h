@@ -165,6 +165,20 @@ std::vector<LumiScanPoint> computeLumiScan(const MCConfig &cfg,
                                            double sigma_eff_fb,
                                            const WeightTable &wt,
                                            std::mt19937_64 &rng);
+
+// Integrate over cos_th in [cos_min, cos_max] using Simpson's rule.
+template <typename Func>
+double integrate_cos(Func f, double cos_min, double cos_max, int n) {
+    if (n % 2 == 1) ++n;
+    const double d = (cos_max - cos_min) / n;
+    double sum = f(cos_min) + f(cos_max);
+    for (int i = 1; i < n; ++i) {
+        const double c = cos_min + i * d;
+        const double fi = f(c);
+        sum += (i % 2 == 0) ? 2.0 * fi : 4.0 * fi;
+    }
+    return sum * d / 3.0;
+}
 }  // namespace gagatt
 
 #endif  // SRC_MC_HELPER_H

@@ -11,6 +11,11 @@
 
 using namespace gagatt;
 
+constexpr double SQRTS_MIN = 2.0 * MTOP + 1.0;
+constexpr double SQRTS_MAX = 1000.0;
+constexpr double COS_MIN = -1.0;
+constexpr double COS_MAX = 1.0;
+
 double diffXsec_fixedHel(double sqrt_s_hat, double cos_th, Helicity l1,
                          Helicity l2) {
     if (sqrt_s_hat < TTBARTHRES) { return 0.0; }
@@ -31,25 +36,6 @@ double diffXsec_unpol(double sqrt_s_hat, double cos_th) {
     // average over 4 photon helicity combos for unpolarized
     return dsig_GeV2_summed * GEV2_TO_FB;
 }
-
-// Integrate over cos_th in [cos_min, cos_max] using Simpson's rule
-template <typename Func>
-double integrate_cos(Func f, double cos_min, double cos_max, int n) {
-    if (n % 2 == 1) ++n;
-    const double d = (cos_max - cos_min) / n;
-    double sum = f(cos_min) + f(cos_max);
-    for (int i = 1; i < n; ++i) {
-        const double c = cos_min + i * d;
-        const double fi = f(c);
-        sum += (i % 2 == 0) ? 2.0 * fi : 4.0 * fi;
-    }
-    return sum * d / 3.0;
-}
-
-constexpr double SQRTS_MIN = 2.0 * MTOP + 1.0;
-constexpr double SQRTS_MAX = 1000.0;
-constexpr double COS_MIN = -1.0;
-constexpr double COS_MAX = 1.0;
 
 int main(int argc, char *argv[]) {
     if (argc != 3 && argc != 4) {

@@ -3,21 +3,6 @@
 // Compute the total cross section sigma(e+e- -> gamma gamma -> t tbar) [fb]
 // as a function of sqrt(s), the e+e- CM energy, by scanning over sqrt(s)
 // and integrating over sqrt(s_hat) and cos(Theta) at each point.
-//
-// The total cross section at a given sqrt(s) is:
-//   sigma = integral_{2M_t}^{sqrt(s)} d sqrt(s_hat)
-//           integral_{-1}^{1} d cos(Theta)
-//           sum_{l1,l2} L^{l1,l2}(z) * d sigma_hat^{l1,l2} / d cos(Theta)
-//           * GEV2_TO_FB / sqrt(s)
-//
-// where z = sqrt(s_hat) / sqrt(s).
-//
-// The effective cross section (for the dileptonic final state) is
-// sigma_eff = sigma * BR(t tbar -> l+ l-).
-//
-// Usage:
-//   ./bin/gagatt_xsec_sqrts <output> <pe1> <pe2> <N_sqrts> [N_COS]
-//   [N_SQRTS_HAT]
 
 #include <cstdlib>
 #include <format>
@@ -28,12 +13,18 @@
 #include "amplitude.h"
 #include "constants.h"
 #include "helicity.h"
-#include "mc.h"         // X_DEFAULT
 #include "mc_helper.h"  // partialXsec, eventRate
 #include "photon.h"     // lumiWeightsAndTotal
 #include "spin_density.h"
 
 using namespace gagatt;
+
+// sqrt(s) scan range.
+// The photon luminosity is nonzero only when z < x/(1+x).
+// For x = 4.8, z_max = 4.8/5.8 ~ 0.83, so sqrt(s) must exceed
+// 2M_t / z_max ~ 417 GeV for any t tbar production.
+constexpr double SQRTS_SCAN_MIN = 350.0;   // GeV
+constexpr double SQRTS_SCAN_MAX = 2000.0;  // GeV
 
 // ---------------------------------------------------------------------------
 // diffEventRate_fixedHel:
@@ -45,19 +36,6 @@ double diffEventRate_fixedHel(double sqrt_s_hat, double cos_th, double L_ll,
     const auto pol = polCoeffsForHelicity(sqrt_s_hat, cos_th, l1, l2);
     const SDMatrixCoefficients sdc(pol);
     return eventRate(sqrt_s_hat, sdc, L_ll, sqrt_s) * 4.0;
-}
-
-// Integrate over cos_th using Simpson's rule.
-template <typename Func>
-double integrate_cos(Func f, double cos_min, double cos_max, int n) {
-    if (n % 2 == 1) ++n;
-    const double d = (cos_max - cos_min) / n;
-    double sum = f(cos_min) + f(cos_max);
-    for (int i = 1; i < n; ++i) {
-        const double c = cos_min + i * d;
-        sum += (i % 2 == 0) ? 2.0 * f(c) : 4.0 * f(c);
-    }
-    return sum * d / 3.0;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,13 +104,6 @@ XsecResult computeTotalXsec(double sqrt_s, double pe1, double pe2, double x,
     res.total = res.pp + res.pm + res.mp + res.mm;
     return res;
 }
-
-// sqrt(s) scan range.
-// The photon luminosity is nonzero only when z < x/(1+x).
-// For x = 4.8, z_max = 4.8/5.8 ~ 0.83, so sqrt(s) must exceed
-// 2M_t / z_max ~ 417 GeV for any t tbar production.
-constexpr double SQRTS_SCAN_MIN = 350.0;   // GeV
-constexpr double SQRTS_SCAN_MAX = 2000.0;  // GeV
 
 int main(int argc, char *argv[]) {
     if (argc != 5 && argc != 6 && argc != 7) {

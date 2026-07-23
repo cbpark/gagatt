@@ -16,9 +16,6 @@
 // contributions (columns 3-6), i.e.,
 //   dsig/dsqrts = dsig/dsqrts_++ + dsig/dsqrts_+-
 //               + dsig/dsqrts_-+ + dsig/dsqrts_--
-//
-// Usage:
-//   ./bin/gagatt_eventrate <output> <sqrt_s> <pe1> <pe2> <N_sqrts> [N_COS]
 
 #include <cstdlib>
 #include <format>
@@ -34,6 +31,10 @@
 #include "spin_density.h"
 
 using namespace gagatt;
+
+constexpr double SQRTS_MIN = 2.0 * MTOP + 1.0;
+constexpr double COS_MIN = -1.0;
+constexpr double COS_MAX = 1.0;
 
 // ---------------------------------------------------------------------------
 // diffEventRate_fixedHel:
@@ -51,24 +52,6 @@ double diffEventRate_fixedHel(double sqrt_s_hat, double cos_th, double L_ll,
     const SDMatrixCoefficients sdc(pol);
     return eventRate(sqrt_s_hat, sdc, L_ll, sqrt_s) * 4.0;
 }
-
-// Integrate over cos_th in [cos_min, cos_max] using Simpson's rule.
-template <typename Func>
-double integrate_cos(Func f, double cos_min, double cos_max, int n) {
-    if (n % 2 == 1) ++n;
-    const double d = (cos_max - cos_min) / n;
-    double sum = f(cos_min) + f(cos_max);
-    for (int i = 1; i < n; ++i) {
-        const double c = cos_min + i * d;
-        const double fi = f(c);
-        sum += (i % 2 == 0) ? 2.0 * fi : 4.0 * fi;
-    }
-    return sum * d / 3.0;
-}
-
-constexpr double SQRTS_MIN = 2.0 * MTOP + 1.0;
-constexpr double COS_MIN = -1.0;
-constexpr double COS_MAX = 1.0;
 
 int main(int argc, char *argv[]) {
     if (argc != 6 && argc != 7) {

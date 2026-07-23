@@ -15,8 +15,6 @@
 #include "constants.h"
 
 namespace gagatt {
-inline constexpr double X_DEFAULT = 4.8;  // machine parameter x
-
 struct MCConfig {
     // Collider parameters
     double sqrt_s = 500.0;  // e+e- CM energy [GeV]
