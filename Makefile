@@ -9,6 +9,7 @@ EXENAME := gagatt_unpol sqrt_s_hat_unpol gagatt_pol_perfect gagatt_pol \
 	luminosity luminosity_weight \
 	gagatt_xsec_parton gagatt_eventrate gagatt_xsec_sqrts \
 	gagatt_mc gagatt_dscan \
+	gagatt_lumi_sigma_C \
 	test
 EXESRCS := $(addprefix $(SRCDIR)/, $(addsuffix .cc, $(EXENAME)))
 TARGETS := $(addprefix $(BINDIR)/, $(EXENAME))
